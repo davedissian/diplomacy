@@ -1,0 +1,29 @@
+{
+    "files.associations": {
+        "iosfwd": "cpp",
+        "__config": "cpp",
+        "__nullptr": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "new": "cpp",
+        "stdexcept": "cpp",
+        "typeinfo": "cpp",
+        "algorithm": "cpp",
+        "type_traits": "cpp",
+        "__hash_table": "cpp",
+        "__tree": "cpp",
+        "deque": "cpp",
+        "map": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "__bit_reference": "cpp",
+        "__string": "cpp",
+        "string_view": "cpp",
+        "memory": "cpp",
+        "utility": "cpp",
+        "__split_buffer": "cpp"
+    },
+    "C_Cpp.intelliSenseEngineFallback": "Enabled"
+}
