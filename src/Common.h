@@ -2,7 +2,12 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
-#include "glm/vec2.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtx/norm.hpp"
+
+// GUI
+#include "gui/imgui.h"
+#include "gui/imgui-SFML.h"
 
 #include <iostream>
 
