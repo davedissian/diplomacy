@@ -9,6 +9,7 @@
 #include "gui/imgui.h"
 #include "gui/imgui-SFML.h"
 
+// STL
 #include <iostream>
 
 #include <string>
@@ -17,6 +18,7 @@
 #include <queue>
 #include <unordered_set>
 #include <unordered_map>
+#include <utility>
 
 using String = std::string;
 
@@ -35,7 +37,14 @@ using HashMap = std::unordered_map<K, V>;
 template <typename T>
 using UniquePtr = std::unique_ptr<T>;
 
+template <typename A, typename B>
+using Pair = std::pair<A, B>;
+
+template <typename T>
+using SharedPtr = std::shared_ptr<T>;
+
 using std::make_unique;
+using std::make_shared;
 
 using Vec2i = glm::ivec2;
 using Vec2 = glm::vec2;
@@ -95,4 +104,25 @@ inline float damp(float a, float b, float t, float time, float dt) {
 // Lerp between a and b by a factor of t over 'time' seconds.
 inline Vec2 damp(const Vec2& a, const Vec2& b, float t, float time, float dt) {
     return lerp(a, b, 1.0f - pow(t, dt / time));
+}
+
+// Intersection between two lines defined as p1->p2 and p3->p4.
+inline Vec2 intersection(const Vec2& p1, const Vec2& p2, const Vec2& p3, const Vec2& p4) {
+    float x1 = p1.x, x2 = p2.x, x3 = p3.x, x4 = p4.x;
+    float y1 = p1.y, y2 = p2.y, y3 = p3.y, y4 = p4.y;
+
+    float d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+    // If d is zero, there is no intersection.
+    if (d == 0) {
+        return {0, 0};
+    }
+
+    // Get the x and y.
+    float pre = (x1 * y2 - y1 * x2), post = (x3 * y4 - y3 * x4);
+    float x = (pre * (x3 - x4) - (x1 - x2) * post) / d;
+    float y = (pre * (y3 - y4) - (y1 - y2) * post) / d;
+
+    // Return the point of intersection.
+    return {x, y};
 }

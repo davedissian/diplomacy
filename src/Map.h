@@ -86,14 +86,30 @@ public:
     struct Edge {
         Vec2 v0;
         Vec2 v1;
+        // Delunay Triangulation. d0.centre -> d1.centre
+        Tile* d0;
+        Tile* d1;
+    };
+
+    struct OrderedEdge {
+        SharedPtr<Edge> edge;
+        bool flipped;
+
+        Vec2& v0();
+        const Vec2& v0() const;
+        Vec2& v1();
+        const Vec2& v1() const;
     };
 
     struct Tile {
         Vec2 centre;
-
         // Neighbour i is joined at edge i.
-        Vector<Edge> edges;
+        Vector<OrderedEdge> edges;
         Vector<Tile*> neighbours;
+
+        double edgeAngle(const Edge& e);
+        double vertexAngle(const Vec2& v);
+        Pair<Vec2, Vec2> orderedEdgeVertices(const OrderedEdge& e);
     };
 
     explicit VoronoiGraph(const voronoi::Voronoi& voronoi);
