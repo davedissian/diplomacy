@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.2)
-project(RealTimeStrategy)
+project(Diplomacy)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
@@ -23,16 +23,16 @@ set(SOURCE_FILES
     src/State.h
     src/World.cpp
     src/World.h)
-add_executable(RealTimeStrategy ${SOURCE_FILES})
+add_executable(Diplomacy ${SOURCE_FILES})
 
-target_include_directories(RealTimeStrategy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(RealTimeStrategy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gui)
+target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gui)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 find_package(SFML REQUIRED system window graphics)
-target_include_directories(RealTimeStrategy PRIVATE ${SFML_INCLUDE_DIR})
-target_link_libraries(RealTimeStrategy ${SFML_LIBRARIES})
+target_include_directories(Diplomacy PRIVATE ${SFML_INCLUDE_DIR})
+target_link_libraries(Diplomacy ${SFML_LIBRARIES})
 
 find_package(OpenGL REQUIRED)
-target_link_libraries(RealTimeStrategy OpenGL::GL)
+target_link_libraries(Diplomacy OpenGL::GL)

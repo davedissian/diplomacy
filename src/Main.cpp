@@ -58,7 +58,7 @@ int Game::run(Vec2i window_size) {
 #endif
 
     screen_size_ = window_size;
-    window_ = make_unique<sf::RenderWindow>(sf::VideoMode((u32)window_size.x, (u32)window_size.y), "RTS Game");
+    window_ = make_unique<sf::RenderWindow>(sf::VideoMode((u32)window_size.x, (u32)window_size.y), "Diplomacy RTS");
     window_->setVerticalSyncEnabled(true);
     ImGui::SFML::Init(*window_);
 

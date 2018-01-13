@@ -190,7 +190,7 @@ void World::draw(sf::RenderWindow* window) {
     // Draw map.
     for (auto& tile : map_->tiles()) {
         drawTile(window, tile, sf::Color(40, 40, 40));
-        //drawTileEdge(window, *tile, sf::Color(80, 80, 80, 80));
+        drawTileEdge(window, tile, sf::Color(80, 80, 80, 80));
     }
 
     // Draw states.
@@ -209,7 +209,7 @@ void World::draw(sf::RenderWindow* window) {
         drawTileEdge(window, *selected_tile_, selected_edge_color);
 
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(500, 500));
+        ImGui::SetNextWindowSize(ImVec2(700, 250));
         ImGui::Begin("Selected Tile");
         ImGui::Text("Centre: %f %f", selected_tile_->centre.x, selected_tile_->centre.y);
         for (int i = 0; i < selected_tile_->neighbours.size(); ++i) {
@@ -218,10 +218,10 @@ void World::draw(sf::RenderWindow* window) {
             float angle1 = (float)selected_tile_->vertexAngle(e.v0());
             float angle2 = (float)selected_tile_->vertexAngle(e.v1());
             if (n != nullptr) {
-                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.0f) to %.0f %.0f (%.0f) diff: %.0f) - centre %.0f %.0f",
+                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.1f) to %.0f %.0f (%.1f) diff: %.1f) - centre %.0f %.0f",
                             i, e.v0().x, e.v0().y, angle1, e.v1().x, e.v1().y, angle2, angle2 - angle1, n->centre.x, n->centre.y);
             } else {
-                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.0f) to %.0f %.0f (%.0f) diff: %.0f) - none",
+                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.1f) to %.0f %.0f (%.1f) diff: %.1f) - none",
                             i, e.v0().x, e.v0().y, angle1, e.v1().x, e.v1().y, angle2, angle2 - angle1);
             }
         }
