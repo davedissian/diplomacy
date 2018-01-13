@@ -19,8 +19,10 @@ set(SOURCE_FILES
     src/voronoi/voronoi.cpp
     src/Common.h
     src/Main.cpp
-    src/Map.cpp
-    src/Map.h)
+    src/State.cpp
+    src/State.h
+    src/World.cpp
+    src/World.h)
 add_executable(RealTimeStrategy ${SOURCE_FILES})
 
 target_include_directories(RealTimeStrategy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

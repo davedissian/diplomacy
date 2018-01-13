@@ -273,6 +273,8 @@ void Update(const sf::Vector2i& mousePos, const sf::Vector2f& displaySize, sf::T
 {
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = displaySize;
+    io.DisplaySize.x /= io.DisplayFramebufferScale.x;
+    io.DisplaySize.y /= io.DisplayFramebufferScale.y;
     io.DeltaTime = dt.asSeconds();
 
     if (s_windowHasFocus) {
@@ -476,7 +478,6 @@ ImVec2 getDownRightAbsolute(const sf::FloatRect & rect)
 // Rendering callback
 void RenderDrawLists(ImDrawData* draw_data)
 {
-
     if (draw_data->CmdListsCount == 0) {
         return;
     }
@@ -520,11 +521,7 @@ void RenderDrawLists(ImDrawData* draw_data)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-#ifdef GL_VERSION_ES_CL_1_1
-        glOrthof(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
-#else
-        glOrtho(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
-#endif
+    glOrtho(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

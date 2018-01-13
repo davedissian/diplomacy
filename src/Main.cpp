@@ -1,5 +1,5 @@
 #include "Common.h"
-#include "Map.h"
+#include "State.h"
 
 enum class MouseButtonState {
     Pressed,
@@ -40,9 +40,9 @@ int Game::run(Vec2i window_size) {
     const int world_size = 0;
     switch (world_size)
     {
-    case 0: world_ = make_unique<World>(500, 1800.0f, 1800.0f); break;
-    case 1: world_ = make_unique<World>(1000, 2400.0f, 2400.0f); break;
-    case 2: world_ = make_unique<World>(2000, 4800.0f, 2400.0f); break;
+    case 0: world_ = make_unique<World>(400, 1800.0f, 1800.0f); break;
+    case 1: world_ = make_unique<World>(800, 2400.0f, 2400.0f); break;
+    case 2: world_ = make_unique<World>(1600, 4800.0f, 2400.0f); break;
     }
 
     // Set up viewport.
@@ -53,7 +53,7 @@ int Game::run(Vec2i window_size) {
 
     // Deal with retina display.
 #ifdef __APPLE__
-    ImGui::GetIO().DisplayFramebufferScale = ImVec2(2.0f, 1.0f);
+    ImGui::GetIO().DisplayFramebufferScale = ImVec2(2.0f, 2.0f);
     window_size *= 2;
 #endif
 

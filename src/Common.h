@@ -4,6 +4,7 @@
 #include <SFML/System.hpp>
 #include "glm/glm.hpp"
 #include "glm/gtx/norm.hpp"
+#include "glm/gtx/vector_query.hpp"
 
 // GUI
 #include "gui/imgui.h"
@@ -68,6 +69,116 @@ namespace std {
     };
 }
 
+// HSV colour.
+class RGBColour {
+public:
+    float r;
+    float g;
+    float b;
+    float a;
+
+    RGBColour(float r, float g, float b, float a = 1.0f) : r(r), g(g), b(b), a(a) {}
+
+    RGBColour(const sf::Color& c) {
+        r = float(c.r) / 255.0f;
+        g = float(c.g) / 255.0f;
+        b = float(c.b) / 255.0f;
+        a = float(c.a) / 255.0f;
+    }
+
+    operator sf::Color() {
+        return sf::Color(sf::Uint8(r * 255.0f), sf::Uint8(g * 255.0f), sf::Uint8(b * 255.0f), sf::Uint8(a * 255.0f));
+    }
+};
+class HSVColour {
+public:
+    float h; // 0 - 360.
+    float s; // 0 - 1
+    float v; // 0 - 1
+    float a; // 0 - 1
+
+    HSVColour(float h, float s, float v, float a = 1.0f) : h(h), s(s), v(v), a(a) {}
+
+    HSVColour(const sf::Color& sfml_colour) {
+        RGBColour colour(sfml_colour);
+
+        a = colour.a;
+
+        float min = colour.r < colour.g ? colour.r : colour.g;
+        min = min < colour.b ? min : colour.b;
+
+        float max = colour.r > colour.g ? colour.r : colour.g;
+        max = max > colour.b ? max : colour.b;
+
+        v = max;
+        float delta = max - min;
+        if (delta < 0.00001f) {
+            s = 0.0f;
+            h = 0.0f;
+        }
+        if (max > 0.0f) {
+            s = (delta / max);
+        } else {
+            // if max is 0, then r = g = b = 0
+            // s = 0, h is undefined
+            s = 0.0f;
+            h = NAN;
+            return;
+        }
+
+        if (colour.r >= max) {
+            // between yellow & magenta.
+            h = (colour.g - sfml_colour.b) / delta;
+        } else if (colour.g >= max) {
+            // between cyan & yellow
+            h = 2.0f + (colour.b - colour.r) / delta;
+        } else {
+            // between magenta & cyan
+            h = 4.0f + (colour.r - colour.g) / delta;
+        }
+
+        h *= 60.0;
+
+        if (h < 0.0f) {
+            h += 360.0f;
+        }
+    }
+
+    operator sf::Color() {
+        if(s <= 0.0) {
+            return RGBColour{v, v, v, a};
+        }
+
+        float hh = h;
+        if (hh >= 360.0) {
+            hh = 0.0;
+        }
+        hh /= 60.0;
+        long i = (long)hh;
+        float ff = hh - i;
+        float p = v * (1.0f - s);
+        float q = v * (1.0f - (s * ff));
+        float t = v * (1.0f - (s * (1.0f - ff)));
+
+        switch (i) {
+            case 0:
+                return RGBColour{v, t, p, a};
+            case 1:
+                return RGBColour{q, v, p, a};
+            case 2:
+                return RGBColour{p, v, t, a};
+            case 3:
+                return RGBColour{p, q, v, a};
+            case 4:
+                return RGBColour{t, p, v, a};
+            case 5:
+            default:
+                return RGBColour{v, p, q, a};
+        }
+    }
+};
+
+// SFML conversion functions.
 inline sf::Vector2f toSFML(const Vec2& v) {
     return {v.x, v.y};
 }
@@ -84,6 +195,7 @@ inline Vec2i fromSFML(const sf::Vector2i& v) {
     return {v.x, v.y};
 }
 
+// Math.
 inline float clamp(float x, float min_value, float max_value) {
     return std::max(min_value, std::min(x, max_value));
 }
@@ -125,4 +237,9 @@ inline Vec2 intersection(const Vec2& p1, const Vec2& p2, const Vec2& p3, const V
 
     // Return the point of intersection.
     return {x, y};
+}
+
+// Vec2 equals.
+inline bool vecEqual(const Vec2& a, const Vec2& b, const float eps = std::numeric_limits<float>::epsilon()) {
+    return glm::isNull(a - b, eps);
 }
