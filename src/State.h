@@ -1,6 +1,8 @@
 #pragma once
 
-#include "World.h"
+#include "Map.h"
+
+class World;
 
 inline Vector<HashSet<Vec2i>> getExclaves(HashSet<Vec2i> points) {
     /*
@@ -52,23 +54,21 @@ inline Vector<HashSet<Vec2i>> getExclaves(HashSet<Vec2i> points) {
     return exclaves;
 }
 
-using Tile = VoronoiGraph::Tile;
-
 class State {
 public:
-    State(sf::Color colour, const String& name, const HashSet<Tile*>& land);
+    State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land);
 
-    void addLandTile(Tile* tile);
-    void removeLandTile(Tile *tile);
+    void addLandTile(Map::Tile* tile);
+    void removeLandTile(Map::Tile *tile);
 
     void draw(sf::RenderWindow* window, World* world);
     void drawBorders(sf::RenderWindow* window, World* world);
 
-    Vector<Vector<VoronoiGraph::OrderedEdge*>> unorderedBoundary() const;
-    const HashSet<Tile*>& land() const;
+    Vector<Vector<Map::TileEdge*>> unorderedBoundary() const;
+    const HashSet<Map::Tile*>& land() const;
 
 private:
     sf::Color colour_;
     String name_;
-    HashSet<Tile*> land_;
+    HashSet<Map::Tile*> land_;
 };

@@ -4,6 +4,12 @@ project(Diplomacy)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 set(SOURCE_FILES
+    src/gameplay/Orders.cpp
+    src/gameplay/Orders.h
+    src/gameplay/Tank.cpp
+    src/gameplay/Tank.h
+    src/gameplay/Unit.cpp
+    src/gameplay/Unit.h
     src/gui/imconfig.h
     src/gui/imgui.cpp
     src/gui/imgui.h
@@ -15,10 +21,14 @@ set(SOURCE_FILES
     src/gui/stb_rect_pack.h
     src/gui/stb_textedit.h
     src/gui/stb_truetype.h
+    src/noise/Noise.cpp
+    src/noise/Noise.h
     src/voronoi/voronoi.h
     src/voronoi/voronoi.cpp
     src/Common.h
     src/Main.cpp
+    src/Map.cpp
+    src/Map.h
     src/State.cpp
     src/State.h
     src/World.cpp

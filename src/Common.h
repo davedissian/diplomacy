@@ -12,7 +12,7 @@
 
 // STL
 #include <iostream>
-
+#include <iomanip>
 #include <string>
 #include <memory>
 #include <vector>
@@ -58,6 +58,13 @@ using u16 = std::uint16_t;
 using u32 = std::uint32_t;
 using f32 = float;
 using f64 = double;
+
+inline std::ostream& operator<<(std::ostream& stream, const Vec2& v)
+{
+    stream << v.x << ", " << v.y;
+    return stream;
+}
+
 
 namespace std {
     template <> struct hash<Vec2i>
@@ -239,7 +246,15 @@ inline Vec2 intersection(const Vec2& p1, const Vec2& p2, const Vec2& p3, const V
     return {x, y};
 }
 
-// Vec2 equals.
+// Vec2.
+inline float vecLength(const Vec2& a) {
+    return glm::length(a);
+}
+
+inline float vecDistance(const Vec2& a, const Vec2& b) {
+    return vecLength(a - b);
+}
+
 inline bool vecEqual(const Vec2& a, const Vec2& b, const float eps = std::numeric_limits<float>::epsilon()) {
     return glm::isNull(a - b, eps);
 }

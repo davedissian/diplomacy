@@ -1,5 +1,5 @@
 #include "Common.h"
-#include "State.h"
+#include "World.h"
 
 enum class MouseButtonState {
     Pressed,
@@ -40,9 +40,9 @@ int Game::run(Vec2i window_size) {
     const int world_size = 0;
     switch (world_size)
     {
-    case 0: world_ = make_unique<World>(400, 1800.0f, 1800.0f); break;
-    case 1: world_ = make_unique<World>(800, 2400.0f, 2400.0f); break;
-    case 2: world_ = make_unique<World>(1600, 4800.0f, 2400.0f); break;
+    case 0: world_ = make_unique<World>(400, Vec2{0.0f, 0.0f}, Vec2{1800.0f, 1800.0f}); break;
+    case 1: world_ = make_unique<World>(800, Vec2{0.0f, 0.0f}, Vec2{2400.0f, 2400.0f}); break;
+    case 2: world_ = make_unique<World>(1600, Vec2{0.0f, 0.0f}, Vec2{4800.0f, 2400.0f}); break;
     }
 
     // Set up viewport.
@@ -161,7 +161,7 @@ void Game::handleMouseButton(float dt, sf::Event::MouseButtonEvent &e, MouseButt
 
 void Game::handleMouseScroll(float dt, sf::Event::MouseWheelScrollEvent &e) {
     const float dead_zone = 0.1f;
-    const float scale = 2.0f;
+    const float scale = 1.5f;
     float factor;
     if (e.delta > dead_zone) {
         factor = 1.0f / scale;
