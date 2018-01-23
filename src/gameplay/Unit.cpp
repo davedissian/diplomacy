@@ -1,14 +1,19 @@
 #include "Common.h"
 #include "Unit.h"
 
-Unit::Unit() : orders_{this} {
+Unit::Unit(const Vec2& position) : position_{position}, orders_{this} {
 }
 
 Unit::~Unit() {
 }
 
-void Unit::addOrder(UniquePtr<Order> order) {
-    orders_.enqueue(std::move(order));
+void Unit::addOrder(UniquePtr<Order> order, bool queue) {
+    orders_.add(std::move(order), queue);
+}
+
+void Unit::stepTowards(float dt, const Vec2& direction, float factor)
+{
+    position_ += direction * factor * speed() * dt;
 }
 
 void Unit::tick(float dt) {
@@ -16,4 +21,8 @@ void Unit::tick(float dt) {
 }
 
 void Unit::draw(sf::RenderWindow *window, World *world) {
+}
+
+void Unit::drawOrderOverlay(sf::RenderWindow* window) {
+    orders_.draw(window);
 }

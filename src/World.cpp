@@ -70,6 +70,7 @@ void World::draw(sf::RenderWindow* window) {
         drawTile(window, *selected_tile_, selected_color);
         drawTileEdge(window, *selected_tile_, selected_edge_color);
 
+#ifdef DEBUG_GUI
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImVec2(700, 250));
         ImGui::Begin("Selected Tile");
@@ -94,6 +95,7 @@ void World::draw(sf::RenderWindow* window) {
             }
         }
         ImGui::End();
+#endif
     }
 }
 

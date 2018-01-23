@@ -4,28 +4,52 @@ class Unit;
 
 class Order {
 public:
-    Order() = default;
+    Order();
     virtual ~Order() = default;
+
+    // Draw when visible.
+    virtual void draw(sf::RenderWindow* window) = 0;
 
     // True: completed. False: Requires more processing.
     virtual bool tick(float dt) = 0;
 
 protected:
     Unit* unit_;
+    Order* previous_;
 
     friend class OrderList;
+};
+
+class MoveOrder : public Order
+{
+public:
+    MoveOrder(const Vec2& target_position);
+
+    ~MoveOrder() override = default;
+
+    // Order
+    void draw(sf::RenderWindow* window) override;
+    bool tick(float dt) override;
+
+private:
+    Vec2 target_position_;
+
+private:
+    Vec2 startPosition() const;
+    Vec2 remaining() const;
 };
 
 class OrderList {
 public:
     OrderList(Unit* unit);
-    OrderList(Unit* unit, Queue<UniquePtr<Order>> orders);
+    OrderList(Unit* unit, List<UniquePtr<Order>> orders);
 
-    void enqueue(UniquePtr<Order> order);
+    void add(UniquePtr<Order> order, bool queue);
+
+    void draw(sf::RenderWindow* window);
     void tick(float dt);
 
 private:
     Unit* unit_;
-    UniquePtr<Order> current_order_;
-    Queue<UniquePtr<Order>> orders_;
+    List<UniquePtr<Order>> orders_;
 };

@@ -3,6 +3,15 @@ project(Diplomacy)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
+# Mirror the directory structure in virtual directory based projects
+function(mirror_physical_directories)
+    foreach(FILE ${ARGN})
+        get_filename_component(PARENT_DIR "${FILE}" PATH)
+        string(REPLACE "/" "\\" GROUP "${PARENT_DIR}")
+        source_group("${GROUP}" FILES "${FILE}")
+    endforeach()
+endfunction()
+
 set(SOURCE_FILES
     src/gameplay/Orders.cpp
     src/gameplay/Orders.h
@@ -34,15 +43,17 @@ set(SOURCE_FILES
     src/World.cpp
     src/World.h)
 add_executable(Diplomacy ${SOURCE_FILES})
+mirror_physical_directories(${SOURCE_FILES})
 
 target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gui)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+set(SFML_STATIC_LIBRARIES TRUE)
 find_package(SFML REQUIRED system window graphics)
 target_include_directories(Diplomacy PRIVATE ${SFML_INCLUDE_DIR})
-target_link_libraries(Diplomacy ${SFML_LIBRARIES})
+target_link_libraries(Diplomacy ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 find_package(OpenGL REQUIRED)
 target_link_libraries(Diplomacy OpenGL::GL)

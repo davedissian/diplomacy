@@ -5,8 +5,8 @@
 
 namespace {
 void subdivide(Vector<Vec2>& points, std::mt19937& rng, const Vec2& A, const Vec2& B, const Vec2& C, const Vec2& D, float min_length) {
-    std::cout << "A " << A << " B " << B << " C " << C << " D " << D << std::endl;
-    std::cout << "Distance AC: " << vecDistance(A, C) << " Distance BD: " << vecDistance(B, D) << "Min: " << min_length << std::endl;
+    //std::cout << "A " << A << " B " << B << " C " << C << " D " << D << std::endl;
+    //std::cout << "Distance AC: " << vecDistance(A, C) << " Distance BD: " << vecDistance(B, D) << "Min: " << min_length << std::endl;
     if (vecDistance(A, C) < min_length || vecDistance(B, D) < min_length) {
         return;
     }

@@ -4,6 +4,7 @@
 
 class Tank : public Unit {
 public:
+    Tank(const Vec2& position);
     ~Tank() override = default;
 
     // Unit
@@ -12,4 +13,6 @@ public:
 
 private:
     float speed_;
+
+    sf::RectangleShape tank_shape_;
 };

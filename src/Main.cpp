@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "World.h"
+#include "gameplay/Tank.h"
 
 enum class MouseButtonState {
     Pressed,
@@ -14,6 +15,7 @@ public:
 
     int run(Vec2i window_size);
 
+    void handleKey(float dt, sf::Event::KeyEvent& e, bool pressed);
     void handleMouseMoved(float dt, sf::Event::MouseMoveEvent& e);
     void handleMouseButton(float dt, sf::Event::MouseButtonEvent& e, MouseButtonState state);
     void handleMouseScroll(float dt, sf::Event::MouseWheelScrollEvent& e);
@@ -32,9 +34,13 @@ private:
     UniquePtr<sf::RenderWindow> window_;
 
     UniquePtr<World> world_;
+
+    // Units.
+    Vector<UniquePtr<Unit>> units_;
+    bool show_orders_;
 };
 
-Game::Game() : camera_movement_speed_(0.0f, 0.0f) {}
+Game::Game() : camera_movement_speed_(0.0f, 0.0f), show_orders_{false} {}
 
 int Game::run(Vec2i window_size) {
     const int world_size = 0;
@@ -44,6 +50,8 @@ int Game::run(Vec2i window_size) {
     case 1: world_ = make_unique<World>(800, Vec2{0.0f, 0.0f}, Vec2{2400.0f, 2400.0f}); break;
     case 2: world_ = make_unique<World>(1600, Vec2{0.0f, 0.0f}, Vec2{4800.0f, 2400.0f}); break;
     }
+
+    units_.emplace_back(std::make_unique<Tank>(Vec2(0.0f, 0.0f)));
 
     // Set up viewport.
     target_centre_ = {0.0f, 0.0f};
@@ -69,6 +77,12 @@ int Game::run(Vec2i window_size) {
         sf::Event event;
         while (window_->pollEvent(event)) {
             ImGui::SFML::ProcessEvent(event);
+            if (event.type == sf::Event::KeyPressed) {
+                handleKey(dt, event.key, true);
+            }
+            if (event.type == sf::Event::KeyReleased) {
+                handleKey(dt, event.key, false);
+            }
             if (event.type == sf::Event::MouseMoved) {
                 handleMouseMoved(dt, event.mouseMove);
             }
@@ -94,10 +108,31 @@ int Game::run(Vec2i window_size) {
         Vec2 current_size = fromSFML(viewport_.getSize());
         viewport_.setSize(toSFML(damp(current_size, target_size_, 0.4f, 0.1f, dt)));
 
+        // Update units.
+        for (auto& unit : units_) {
+            unit->tick(dt);
+        }
+
         // Draw.
         window_->setView(viewport_);
         window_->clear(sf::Color::Black);
+
+        // Draw world.
         world_->draw(window_.get());
+
+        // Draw units.
+        for (auto& unit : units_) {
+            unit->draw(window_.get(), world_.get());
+        }
+
+        // Draw overlays.
+        if (show_orders_) {
+            for (auto& unit : units_) {
+                unit->drawOrderOverlay(window_.get());
+            }
+        }
+
+        // Render UI and display.
         ImGui::SFML::Render(*window_);
         window_->display();
 
@@ -107,6 +142,14 @@ int Game::run(Vec2i window_size) {
     }
 
     return 0;
+}
+
+void Game::handleKey(float dt, sf::Event::KeyEvent& e, bool pressed)
+{
+    if (e.code == sf::Keyboard::LShift)
+    {
+        show_orders_ = pressed;
+    }
 }
 
 void Game::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
@@ -156,7 +199,9 @@ void Game::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
 }
 
 void Game::handleMouseButton(float dt, sf::Event::MouseButtonEvent &e, MouseButtonState state) {
-
+    if (state == MouseButtonState::Pressed && e.button == sf::Mouse::Right) {
+        units_[0]->addOrder(make_unique<MoveOrder>(mapScreenToWorld(last_mouse_position_)), show_orders_);
+    }
 }
 
 void Game::handleMouseScroll(float dt, sf::Event::MouseWheelScrollEvent &e) {

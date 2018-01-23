@@ -30,6 +30,9 @@ template <typename T>
 using Queue = std::queue<T>;
 
 template <typename T>
+using List = std::list<T>;
+
+template <typename T>
 using HashSet = std::unordered_set<T>;
 
 template <typename K, typename V>
@@ -58,6 +61,7 @@ using u16 = std::uint16_t;
 using u32 = std::uint32_t;
 using f32 = float;
 using f64 = double;
+using uint = u32;
 
 inline std::ostream& operator<<(std::ostream& stream, const Vec2& v)
 {
@@ -201,6 +205,14 @@ inline Vec2 fromSFML(const sf::Vector2f& v) {
 inline Vec2i fromSFML(const sf::Vector2i& v) {
     return {v.x, v.y};
 }
+
+// Constants.
+#ifdef PI
+#undef PI
+#endif
+const float PI = 3.14159265f;
+const float RAD_TO_DEG = 180.0f / PI;
+const float DEG_TO_RAD = PI / 180.0f;
 
 // Math.
 inline float clamp(float x, float min_value, float max_value) {

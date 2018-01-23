@@ -2,6 +2,7 @@
 
 #include "Map.h"
 #include "State.h"
+#include "gameplay/Unit.h"
 
 class World {
 public:

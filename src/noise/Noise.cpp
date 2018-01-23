@@ -7,6 +7,7 @@
 #include "noise/Noise.h"
 
 #include <random>
+#include <numeric>
 
 fBmNoise::fBmNoise(uint octaves, float frequency, float amplitude, float lacunarity,
                    float persistence)
