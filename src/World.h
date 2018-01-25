@@ -14,8 +14,8 @@ public:
     void drawTileEdge(sf::RenderWindow* window, const Map::Tile& tile, sf::Color colour);
     void drawJoinedRibbon(sf::RenderWindow* window, const Vector<Vec2>& points, float inner_thickness, float outer_thickness, const sf::Color& colour);
 
-    // Events.
-    void onMouseMove(const Vec2& projected_mouse_position);
+    // Tiles
+    const Vector<Map::Tile>& mapTiles() const;
 
 private:
     HashMap<int, UniquePtr<State>> states_;
@@ -24,7 +24,6 @@ private:
     RngType rng_;
     UniquePtr<Map> map_;
     HashSet<Map::Tile*> unclaimed_tiles_;
-    Map::Tile* selected_tile_;
 
 private:
     void generateStates(int count, int max_size);

@@ -3,7 +3,7 @@
 #include "Map.h"
 #include "State.h"
 
-World::World(int num_points, const Vec2& min, const Vec2& max) : selected_tile_(nullptr) {
+World::World(int num_points, const Vec2& min, const Vec2& max) {
     const int relax_count = 20;
 
     // Seed RNG.
@@ -61,41 +61,6 @@ void World::draw(sf::RenderWindow* window) {
     }
     for (auto& state_pair : states_) {
         state_pair.second->drawBorders(window, this);
-    }
-
-    // Highlight selected tile.
-    if (selected_tile_) {
-        sf::Color selected_color(20, 50, 120, 120);
-        sf::Color selected_edge_color(20, 50, 120, 200);
-        drawTile(window, *selected_tile_, selected_color);
-        drawTileEdge(window, *selected_tile_, selected_edge_color);
-
-#ifdef DEBUG_GUI
-        ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(700, 250));
-        ImGui::Begin("Selected Tile");
-        ImGui::Text("Centre: %f %f", selected_tile_->centre.x, selected_tile_->centre.y);
-        ImGui::Text("Unusable? %s", selected_tile_->usable ? "true" : "false");
-        for (int i = 0; i < selected_tile_->edges.size(); ++i) {
-            auto& e = selected_tile_->edges[i];
-            auto& n = e.neighbour;
-            float angle1 = (float)selected_tile_->vertexAngle(e.points.front());
-            float angle2 = (float)selected_tile_->vertexAngle(e.points.back());
-            if (n != nullptr) {
-                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.1f) to %.0f %.0f (%.1f) diff: %.1f) - centre %.0f %.0f",
-                            i,
-                            e.points.front().x, e.points.front().y, angle1,
-                            e.points.back().x, e.points.back().y, angle2, angle2 - angle1,
-                            n->centre.x, n->centre.y);
-            } else {
-                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.1f) to %.0f %.0f (%.1f) diff: %.1f) - none",
-                            i,
-                            e.points.front().x, e.points.front().y, angle1,
-                            e.points.back().x, e.points.back().y, angle2, angle2 - angle1);
-            }
-        }
-        ImGui::End();
-#endif
     }
 }
 
@@ -165,15 +130,9 @@ void World::drawJoinedRibbon(sf::RenderWindow *window, const Vector<Vec2>& point
     }
 }
 
-void World::onMouseMove(const Vec2 &projected_mouse_position) {
-    float nearest_distance_sq = std::numeric_limits<float>::infinity();
-    for (auto& tile : map_->tiles()) {
-        float distance = glm::distance2(projected_mouse_position, tile.centre);
-        if (distance < nearest_distance_sq) {
-            nearest_distance_sq = distance;
-            selected_tile_ = &tile;
-        }
-    }
+const Vector<Map::Tile>& World::mapTiles() const
+{
+    return map_->tiles();
 }
 
 void World::generateStates(int count, int max_size) {

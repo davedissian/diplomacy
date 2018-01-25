@@ -55,6 +55,7 @@ private:
     Vec2 target_size_;
 
     UniquePtr<World> world_;
+    const Map::Tile* selected_tile_;
 
     // Units.
     Vector<UniquePtr<Unit>> units_;
@@ -103,7 +104,7 @@ GameState::GameState(Game* game): game_{game}
     viewport_.setSize(toSFML(game_->screenSize()));
 }
 
-MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_speed_{0.0f, 0.0f}, show_orders_{false} {
+MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_speed_{0.0f, 0.0f}, selected_tile_{nullptr}, show_orders_{false} {
     const int world_size = 0;
     switch (world_size)
     {
@@ -141,6 +142,42 @@ void MainGameState::draw(sf::RenderWindow* window) {
     // Draw world.
     world_->draw(window);
 
+    // Highlight selected tile.
+    if (selected_tile_) {
+        sf::Color selected_color(20, 50, 120, 120);
+        sf::Color selected_edge_color(20, 50, 120, 200);
+        world_->drawTile(window, *selected_tile_, selected_color);
+        world_->drawTileEdge(window, *selected_tile_, selected_edge_color);
+
+#ifdef DEBUG_GUI
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImVec2(700, 250));
+        ImGui::Begin("Selected Tile");
+        ImGui::Text("Centre: %f %f", selected_tile_->centre.x, selected_tile_->centre.y);
+        ImGui::Text("Unusable? %s", selected_tile_->usable ? "true" : "false");
+        for (int i = 0; i < selected_tile_->edges.size(); ++i) {
+            auto& e = selected_tile_->edges[i];
+            auto& n = e.neighbour;
+            float angle1 = (float)selected_tile_->vertexAngle(e.points.front());
+            float angle2 = (float)selected_tile_->vertexAngle(e.points.back());
+            if (n != nullptr) {
+                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.1f) to %.0f %.0f (%.1f) diff: %.1f) - centre %.0f %.0f",
+                    i,
+                    e.points.front().x, e.points.front().y, angle1,
+                    e.points.back().x, e.points.back().y, angle2, angle2 - angle1,
+                    n->centre.x, n->centre.y);
+            }
+            else {
+                ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.1f) to %.0f %.0f (%.1f) diff: %.1f) - none",
+                    i,
+                    e.points.front().x, e.points.front().y, angle1,
+                    e.points.back().x, e.points.back().y, angle2, angle2 - angle1);
+            }
+        }
+        ImGui::End();
+#endif
+    }
+
     // Draw units.
     for (auto& unit : units_) {
         unit->draw(window, world_.get());
@@ -167,7 +204,14 @@ void MainGameState::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
 
     // Highlight tile underneath cursor.
     Vec2 proj_mouse_position = game_->mapScreenToWorld(current_mouse_position);
-    world_->onMouseMove(proj_mouse_position);
+    float nearest_distance_sq = std::numeric_limits<float>::infinity();
+    for (auto& tile : world_->mapTiles()) {
+        float distance = glm::distance2(proj_mouse_position, tile.centre);
+        if (distance < nearest_distance_sq) {
+            nearest_distance_sq = distance;
+            selected_tile_ = &tile;
+        }
+    }
 
     // If the mouse cursor reaches the boundary of the screen, move in that direction, scaled by distance.
     camera_movement_speed_ = { 0.0f, 0.0f };
