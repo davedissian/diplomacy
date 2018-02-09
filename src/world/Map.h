@@ -1,7 +1,7 @@
 #pragma once
 
 #include <random>
-#include <voronoi/voronoi.h>
+#include "math/voronoi/voronoi.h"
 
 const float VORONOI_EPSILON = 1e-2f;
 
@@ -40,8 +40,8 @@ public:
 
         const static int EDGE_DETAIL = 0; // Total number of points in an edge = 1 << EDGE_DETAIL + 2
 
-        double edgeAngle(const Edge& e);
-        double vertexAngle(const Vec2& v);
+        double edgeAngle(const Edge& e) const;
+        double vertexAngle(const Vec2& v) const;
     };
 
     explicit Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std::mt19937& rng);

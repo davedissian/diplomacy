@@ -1,7 +1,7 @@
 #include "Common.h"
-#include "State.h"
-#include "Map.h"
-#include "noise/Noise.h"
+#include "world/State.h"
+#include "world/Map.h"
+#include "math/Noise.h"
 
 namespace {
 void subdivide(Vector<Vec2>& points, std::mt19937& rng, const Vec2& A, const Vec2& B, const Vec2& C, const Vec2& D, float min_length) {
@@ -78,12 +78,12 @@ const Vec2 &Map::TileEdge::v1() const {
     return points.back();
 }
 
-double Map::Tile::edgeAngle(const Edge &e) {
+double Map::Tile::edgeAngle(const Edge &e) const {
     Vec2 centre_offset = (e.v0() + e.v1()) * 0.5f - centre;
     return atan2(centre_offset.y, centre_offset.x);
 }
 
-double Map::Tile::vertexAngle(const Vec2 &v) {
+double Map::Tile::vertexAngle(const Vec2 &v) const {
     return atan2(v.y - centre.y, v.x - centre.x);
 }
 

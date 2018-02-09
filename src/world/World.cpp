@@ -1,7 +1,7 @@
 #include "Common.h"
-#include "World.h"
-#include "Map.h"
-#include "State.h"
+#include "world/World.h"
+#include "world/Map.h"
+#include "world/State.h"
 
 World::World(int num_points, const Vec2& min, const Vec2& max) {
     const int relax_count = 20;
@@ -43,9 +43,58 @@ World::World(int num_points, const Vec2& min, const Vec2& max) {
             unclaimed_tiles_.insert(&tile);
         }
     }
+}
 
-    //generateStates(6, 40);
-    fillStates(8);
+
+void World::generateStates(int count, int max_size) {
+    for (int i = 0; i < count; ++i) {
+        std::uniform_int_distribution<> tile_id_dist(0, (int)map_->tiles().size() - 1);
+
+        // Take a tile as the starting land.
+        HashSet<Map::Tile*> starting_land = {&map_->tiles()[tile_id_dist(rng_)]};
+        unclaimed_tiles_.erase(*starting_land.begin());
+
+        // Form a state here.
+        std::uniform_real_distribution<float> hue_dist(0.0f, 360.0f);
+        HSVColour country_colour{hue_dist(rng_), 0.8f, 0.7f, 0.8f};
+        states_[i] = make_unique<State>(country_colour, "Generated State " + std::to_string(i), starting_land);
+
+        // Try and take up to 'start_size' tiles.
+        for (int j = 0; j < max_size; ++j) {
+            if (!growState(states_[i].get())) {
+                break;
+            }
+        }
+    }
+}
+
+void World::fillStates(int count) {
+    const int start_size = 40;
+    for (int i = 0; i < count; ++i) {
+        std::uniform_int_distribution<> tile_id_dist(0, (int)unclaimed_tiles_.size() - 1);
+
+        // Take a tile as the starting land.
+        int starting_tile_index = tile_id_dist(rng_);
+        HashSet<Map::Tile*> starting_land = {*std::next(unclaimed_tiles_.begin(), starting_tile_index)};
+        unclaimed_tiles_.erase(*starting_land.begin());
+
+        // Form a state here.
+        std::uniform_real_distribution<float> hue_dist(0.0f, 360.0f);
+        HSVColour country_colour{hue_dist(rng_), 0.6f, 0.8f, 0.5f};
+        states_[i] = make_unique<State>(country_colour, "Generated State " + std::to_string(i), starting_land);
+    }
+
+    // Grow each state until none can grow any longer.
+    bool should_grow_states = true;
+    while (should_grow_states) {
+        bool state_grew = false;
+        for (auto &state : states_) {
+            state_grew |= growState(state.second.get());
+        }
+        if (!state_grew) {
+            should_grow_states = false;
+        }
+    }
 }
 
 void World::draw(sf::RenderWindow* window) {
@@ -130,59 +179,20 @@ void World::drawJoinedRibbon(sf::RenderWindow *window, const Vector<Vec2>& point
     }
 }
 
-const Vector<Map::Tile>& World::mapTiles() const
-{
+const Vector<Map::Tile>& World::mapTiles() const {
     return map_->tiles();
 }
 
-void World::generateStates(int count, int max_size) {
-    for (int i = 0; i < count; ++i) {
-        std::uniform_int_distribution<> tile_id_dist(0, (int)map_->tiles().size() - 1);
-
-        // Take a tile as the starting land.
-        HashSet<Map::Tile*> starting_land = {&map_->tiles()[tile_id_dist(rng_)]};
-        unclaimed_tiles_.erase(*starting_land.begin());
-
-        // Form a state here.
-        std::uniform_real_distribution<float> hue_dist(0.0f, 360.0f);
-        HSVColour country_colour{hue_dist(rng_), 0.8f, 0.7f, 0.8f};
-        states_[i] = make_unique<State>(country_colour, "Generated State " + std::to_string(i), starting_land);
-
-        // Try and take up to 'start_size' tiles.
-        for (int j = 0; j < max_size; ++j) {
-            if (!growState(states_[i].get())) {
-                break;
-            }
-        }
-    }
+const HashMap<int, SharedPtr<State>> &World::states() const {
+    return states_;
 }
 
-void World::fillStates(int count) {
-    const int start_size = 40;
-    for (int i = 0; i < count; ++i) {
-        std::uniform_int_distribution<> tile_id_dist(0, (int)map_->tiles().size() - 1);
-
-        // Take a tile as the starting land.
-        HashSet<Map::Tile*> starting_land = {&map_->tiles()[tile_id_dist(rng_)]};
-        unclaimed_tiles_.erase(*starting_land.begin());
-
-        // Form a state here.
-        std::uniform_real_distribution<float> hue_dist(0.0f, 360.0f);
-        HSVColour country_colour{hue_dist(rng_), 0.6f, 0.8f, 0.5f};
-        states_[i] = make_unique<State>(country_colour, "Generated State " + std::to_string(i), starting_land);
+WeakPtr<State> World::getStateById(int id) const {
+    auto it = states_.find(id);
+    if (it != states_.end()) {
+        return it->second;
     }
-
-    // Grow each state until none can grow any longer.
-    bool should_grow_states = true;
-    while (should_grow_states) {
-        bool state_grew = false;
-        for (auto &state : states_) {
-            state_grew |= growState(state.second.get());
-        }
-        if (!state_grew) {
-            should_grow_states = false;
-        }
-    }
+    return {};
 }
 
 bool World::growState(State *state) {

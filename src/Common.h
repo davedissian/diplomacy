@@ -16,6 +16,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <list>
 #include <queue>
 #include <unordered_set>
 #include <unordered_map>
@@ -45,7 +46,13 @@ template <typename A, typename B>
 using Pair = std::pair<A, B>;
 
 template <typename T>
+using EnableSharedFromThis = std::enable_shared_from_this<T>;
+
+template <typename T>
 using SharedPtr = std::shared_ptr<T>;
+
+template <typename T>
+using WeakPtr = std::weak_ptr<T>;
 
 using std::make_unique;
 using std::make_shared;
@@ -205,6 +212,12 @@ inline Vec2 fromSFML(const sf::Vector2f& v) {
 inline Vec2i fromSFML(const sf::Vector2i& v) {
     return {v.x, v.y};
 }
+
+// Enums.
+enum class MouseButtonState {
+    Pressed,
+    Released
+};
 
 // Constants.
 #ifdef PI

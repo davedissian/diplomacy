@@ -58,6 +58,8 @@ class State {
 public:
     State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land);
 
+    void setHighlighted(bool highlighted);
+
     void addLandTile(Map::Tile* tile);
     void removeLandTile(Map::Tile *tile);
 
@@ -71,4 +73,5 @@ private:
     sf::Color colour_;
     String name_;
     HashSet<Map::Tile*> land_;
+    bool highlighted_;
 };

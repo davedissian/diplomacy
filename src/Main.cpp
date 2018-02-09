@@ -1,11 +1,10 @@
 #include "Common.h"
-#include "World.h"
-#include "gameplay/Tank.h"
+#include "world/World.h"
+#include "player/Player.h"
+#include "gameplay/Squad.h"
+#include "player/LocalController.h"
 
-enum class MouseButtonState {
-    Pressed,
-    Released
-};
+//#define DEBUG_GUI
 
 const int BOUNDARY_SIZE = 100;
 
@@ -57,8 +56,14 @@ private:
     UniquePtr<World> world_;
     const Map::Tile* selected_tile_;
 
+    // Players.
+    Vector<SharedPtr<Player>> players_;
+
+    // Local controller.
+    UniquePtr<LocalController> local_controller_;
+
     // Units.
-    Vector<UniquePtr<Unit>> units_;
+    Vector<SharedPtr<Unit>> units_;
     bool show_orders_;
 };
 
@@ -105,15 +110,44 @@ GameState::GameState(Game* game): game_{game}
 }
 
 MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_speed_{0.0f, 0.0f}, selected_tile_{nullptr}, show_orders_{false} {
-    const int world_size = 0;
-    switch (world_size)
+    const int world_size_preset = 0;
+    const int num_players = 8;
+
+    switch (world_size_preset)
     {
     case 0: world_ = make_unique<World>(400, Vec2{ 0.0f, 0.0f }, Vec2{ 1800.0f, 1800.0f }); break;
     case 1: world_ = make_unique<World>(800, Vec2{ 0.0f, 0.0f }, Vec2{ 2400.0f, 2400.0f }); break;
     case 2: world_ = make_unique<World>(1600, Vec2{ 0.0f, 0.0f }, Vec2{ 4800.0f, 2400.0f }); break;
     }
 
-    units_.emplace_back(std::make_unique<Tank>(Vec2(0.0f, 0.0f)));
+    // Create states and set up players to take ownership of states.
+    world_->fillStates(num_players);
+    auto states = world_->states();
+    for (auto state_pair : states) {
+        // Get centre of state.
+        Vec2 centre{0.0f, 0.0f};
+        for (auto& tile : state_pair.second->land()) {
+            centre += tile->centre;
+        }
+        centre /= (float)state_pair.second->land().size();
+
+        // Set up units.
+        Vector<SharedPtr<Unit>> units;
+        units.emplace_back(std::make_shared<Squad>(centre));
+        units_.insert(units_.end(), units.begin(), units.end());
+
+        // Create player.
+        WeakPtr<State> state = state_pair.second;
+        Vector<WeakPtr<Unit>> units_weak;
+        for (auto& ptr : units) {
+            units_weak.push_back(WeakPtr<Unit>(ptr));
+        }
+        players_.emplace_back(std::make_shared<Player>(String("Player ") + std::to_string(state_pair.first), state, units_weak));
+    }
+
+    // Set up local controller.
+    local_controller_ = make_unique<LocalController>();
+    local_controller_->possess(players_[0].get());
 
     // Set up viewport.
     target_centre_ = {0.0f, 0.0f};

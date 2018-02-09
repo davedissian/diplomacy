@@ -15,6 +15,8 @@ endfunction()
 set(SOURCE_FILES
     src/gameplay/Orders.cpp
     src/gameplay/Orders.h
+    src/gameplay/Squad.cpp
+    src/gameplay/Squad.h
     src/gameplay/Tank.cpp
     src/gameplay/Tank.h
     src/gameplay/Unit.cpp
@@ -30,28 +32,40 @@ set(SOURCE_FILES
     src/gui/stb_rect_pack.h
     src/gui/stb_textedit.h
     src/gui/stb_truetype.h
-    src/noise/Noise.cpp
-    src/noise/Noise.h
-    src/voronoi/voronoi.h
-    src/voronoi/voronoi.cpp
+    src/math/Noise.cpp
+    src/math/Noise.h
+    src/math/voronoi/voronoi.h
+    src/math/voronoi/voronoi.cpp
+    src/player/Controller.cpp
+    src/player/Controller.h
+    src/player/LocalController.cpp
+    src/player/LocalController.h
+    src/player/Player.cpp
+    src/player/Player.h
+    src/world/Map.cpp
+    src/world/Map.h
+    src/world/State.cpp
+    src/world/State.h
+    src/world/World.cpp
+    src/world/World.h
     src/Common.h
-    src/Main.cpp
-    src/Map.cpp
-    src/Map.h
-    src/State.cpp
-    src/State.h
-    src/World.cpp
-    src/World.h)
+    src/Main.cpp)
 add_executable(Diplomacy ${SOURCE_FILES})
 mirror_physical_directories(${SOURCE_FILES})
 
 target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gui)
+target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/math)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(SFML_STATIC_LIBRARIES TRUE)
-find_package(SFML REQUIRED system window graphics)
+find_package(SFML COMPONENTS system window graphics)
+if (NOT SFML_FOUND)
+    message(STATUS Attempting to find dynamic SFML)
+    set(SFML_STATIC_LIBRARIES FALSE)
+    find_package(SFML REQUIRED system window graphics)
+endif()
 target_include_directories(Diplomacy PRIVATE ${SFML_INCLUDE_DIR})
 target_link_libraries(Diplomacy ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 

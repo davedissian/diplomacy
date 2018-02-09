@@ -1,8 +1,13 @@
 #include "Common.h"
-#include "State.h"
-#include "World.h"
+#include "world/State.h"
+#include "world/World.h"
 
-State::State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land) : colour_(colour), name_(name), land_(land) {
+State::State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land) : colour_(colour), name_(name), land_(land), highlighted_{false} {
+    colour_.a = 100;
+}
+
+void State::setHighlighted(bool highlighted) {
+    highlighted_ = highlighted;
 }
 
 void State::addLandTile(Map::Tile *tile) {
@@ -14,9 +19,12 @@ void State::removeLandTile(Map::Tile *tile) {
 }
 
 void State::draw(sf::RenderWindow* window, World* world) {
+    sf::Color colour = colour_;
+    if (!highlighted_) {
+        colour.a = 40;
+    }
     for (const auto tile : land_) {
-        colour_.a = 100;
-        world->drawTile(window, *tile, colour_);
+        world->drawTile(window, *tile, colour);
         //world->drawTileEdge(window, *tile, sf::Color(colour_.r, colour_.g, colour_.b, 40));
     }
 }

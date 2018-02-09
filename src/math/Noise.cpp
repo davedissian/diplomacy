@@ -4,7 +4,7 @@
  */
 #include "Common.h"
 
-#include "noise/Noise.h"
+#include "math/Noise.h"
 
 #include <random>
 #include <numeric>
