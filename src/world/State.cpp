@@ -4,6 +4,22 @@
 
 State::State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land) : colour_(colour), name_(name), land_(land), highlighted_{false} {
     colour_.a = 100;
+    gui_name_.setString(name);
+
+    // Calculate centre.
+    centre_ = {0.0f, 0.0f};
+    for (auto& tile : land_) {
+        centre_ += tile->centre;
+    }
+    centre_ /= (float)land_.size();
+
+    gui_name_.setPosition(toSFML(centre_));
+    gui_name_.setCharacterSize(20);
+}
+
+void State::setName(const String &name) {
+    name_ = name;
+    gui_name_.setString(name);
 }
 
 void State::setHighlighted(bool highlighted) {
@@ -65,6 +81,10 @@ void State::drawBorders(sf::RenderWindow* window, World* world) {
     }
 }
 
+void State::drawOverlays(sf::RenderWindow *window, World *world) {
+    window->draw(gui_name_);
+}
+
 Vector<Vector<Map::TileEdge*>> State::unorderedBoundary() const {
     // Build edge list containing state boundaries.
     Vector<Vector<Map::TileEdge*>> exclave_boundaries;
@@ -81,4 +101,8 @@ Vector<Vector<Map::TileEdge*>> State::unorderedBoundary() const {
 
 const HashSet<Map::Tile*>& State::land() const {
     return land_;
+}
+
+const Vec2 State::midpoint() const {
+    return centre_;
 }

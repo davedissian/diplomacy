@@ -58,6 +58,7 @@ class State {
 public:
     State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land);
 
+    void setName(const String& name);
     void setHighlighted(bool highlighted);
 
     void addLandTile(Map::Tile* tile);
@@ -65,13 +66,20 @@ public:
 
     void draw(sf::RenderWindow* window, World* world);
     void drawBorders(sf::RenderWindow* window, World* world);
+    void drawOverlays(sf::RenderWindow* window, World* world);
 
     Vector<Vector<Map::TileEdge*>> unorderedBoundary() const;
     const HashSet<Map::Tile*>& land() const;
+
+    const Vec2 midpoint() const;
 
 private:
     sf::Color colour_;
     String name_;
     HashSet<Map::Tile*> land_;
+    Vec2 centre_;
+
+    // Rendering data.
     bool highlighted_;
+    sf::Text gui_name_;
 };

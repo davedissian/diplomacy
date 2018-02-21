@@ -124,16 +124,9 @@ MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_spee
     world_->fillStates(num_players);
     auto states = world_->states();
     for (auto state_pair : states) {
-        // Get centre of state.
-        Vec2 centre{0.0f, 0.0f};
-        for (auto& tile : state_pair.second->land()) {
-            centre += tile->centre;
-        }
-        centre /= (float)state_pair.second->land().size();
-
         // Set up units.
         Vector<SharedPtr<Unit>> units;
-        units.emplace_back(std::make_shared<Squad>(centre));
+        units.emplace_back(std::make_shared<Squad>(state_pair.second->midpoint()));
         units_.insert(units_.end(), units.begin(), units.end());
 
         // Create player.
@@ -143,6 +136,9 @@ MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_spee
             units_weak.push_back(WeakPtr<Unit>(ptr));
         }
         players_.emplace_back(std::make_shared<Player>(String("Player ") + std::to_string(state_pair.first), state, units_weak));
+
+        // Name state.
+        //state_pair.second->setName(String("State ") + std::to_string(state_pair.first));
     }
 
     // Set up local controller.
