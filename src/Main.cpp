@@ -245,7 +245,7 @@ void MainGameState::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
 
     // If the mouse cursor reaches the boundary of the screen, move in that direction, scaled by distance.
     camera_movement_speed_ = { 0.0f, 0.0f };
-    const Vec2 speed = fromSFML(viewport_.getSize());
+    const Vec2 speed = fromSFML(viewport_.getSize()) * 0.5f;
     // Right side.
     if (current_mouse_position.x > game_->screenSize().x - BOUNDARY_SIZE) {
         int distance = game_->screenSize().x - current_mouse_position.x;
