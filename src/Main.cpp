@@ -124,16 +124,9 @@ MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_spee
     world_->fillStates(num_players);
     auto states = world_->states();
     for (auto state_pair : states) {
-        // Get centre of state.
-        Vec2 centre{0.0f, 0.0f};
-        for (auto& tile : state_pair.second->land()) {
-            centre += tile->centre;
-        }
-        centre /= (float)state_pair.second->land().size();
-
         // Set up units.
         Vector<SharedPtr<Unit>> units;
-        units.emplace_back(std::make_shared<Squad>(centre));
+        units.emplace_back(std::make_shared<Squad>(state_pair.second->midpoint()));
         units_.insert(units_.end(), units.begin(), units.end());
 
         // Create player.
@@ -143,6 +136,9 @@ MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_spee
             units_weak.push_back(WeakPtr<Unit>(ptr));
         }
         players_.emplace_back(std::make_shared<Player>(String("Player ") + std::to_string(state_pair.first), state, units_weak));
+
+        // Name state.
+        //state_pair.second->setName(String("State ") + std::to_string(state_pair.first));
     }
 
     // Set up local controller.
@@ -249,7 +245,7 @@ void MainGameState::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
 
     // If the mouse cursor reaches the boundary of the screen, move in that direction, scaled by distance.
     camera_movement_speed_ = { 0.0f, 0.0f };
-    const Vec2 speed = fromSFML(viewport_.getSize());
+    const Vec2 speed = fromSFML(viewport_.getSize()) * 0.5f;
     // Right side.
     if (current_mouse_position.x > game_->screenSize().x - BOUNDARY_SIZE) {
         int distance = game_->screenSize().x - current_mouse_position.x;

@@ -111,6 +111,9 @@ void World::draw(sf::RenderWindow* window) {
     for (auto& state_pair : states_) {
         state_pair.second->drawBorders(window, this);
     }
+    for (auto& state_pair : states_) {
+        state_pair.second->drawOverlays(window, this);
+    }
 }
 
 void World::drawTile(sf::RenderWindow* window, const Map::Tile& tile, sf::Color colour) {
