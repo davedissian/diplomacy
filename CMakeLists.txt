@@ -57,8 +57,9 @@ target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gui)
 target_include_directories(Diplomacy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/math)
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+set(SFML_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/SFML")
 set(SFML_STATIC_LIBRARIES TRUE)
 find_package(SFML COMPONENTS system window graphics)
 if (NOT SFML_FOUND)
