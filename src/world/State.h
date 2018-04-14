@@ -56,27 +56,27 @@ inline Vector<HashSet<Vec2i>> getExclaves(HashSet<Vec2i> points) {
 
 class State {
 public:
-    State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land);
+    State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land);
 
     void setName(const String& name);
     void setHighlighted(bool highlighted);
 
-    void addLandTile(Map::Tile* tile);
-    void removeLandTile(Map::Tile *tile);
+    void addLandTile(Map::Site* tile);
+    void removeLandTile(Map::Site *tile);
 
     void draw(sf::RenderWindow* window, World* world);
     void drawBorders(sf::RenderWindow* window, World* world);
     void drawOverlays(sf::RenderWindow* window, World* world);
 
-    Vector<Vector<Map::TileEdge*>> unorderedBoundary() const;
-    const HashSet<Map::Tile*>& land() const;
+    Vector<Vector<Map::GraphEdge*>> unorderedBoundary() const;
+    const HashSet<Map::Site*>& land() const;
 
     const Vec2 midpoint() const;
 
 private:
     sf::Color colour_;
     String name_;
-    HashSet<Map::Tile*> land_;
+    HashSet<Map::Site*> land_;
     Vec2 centre_;
 
     // Rendering data.

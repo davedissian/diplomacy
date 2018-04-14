@@ -54,7 +54,7 @@ private:
     Vec2 target_size_;
 
     UniquePtr<World> world_;
-    const Map::Tile* selected_tile_;
+    const Map::Site* selected_tile_;
 
     // Players.
     Vector<SharedPtr<Player>> players_;

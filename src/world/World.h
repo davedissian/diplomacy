@@ -14,8 +14,8 @@ public:
 
     // Drawing.
     void draw(sf::RenderWindow* window);
-    void drawTile(sf::RenderWindow* window, const Map::Tile& tile, sf::Color colour);
-    void drawTileEdge(sf::RenderWindow* window, const Map::Tile& tile, sf::Color colour);
+    void drawTile(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour);
+    void drawTileEdge(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour);
     void drawJoinedRibbon(sf::RenderWindow* window, const Vector<Vec2>& points, float inner_thickness, float outer_thickness, const sf::Color& colour);
 
     // States.
@@ -23,15 +23,14 @@ public:
     WeakPtr<State> getStateById(int id) const;
 
     // Tiles.
-    const Vector<Map::Tile>& mapTiles() const;
+    const Vector<Map::Site>& mapTiles() const;
 
 private:
     HashMap<int, SharedPtr<State>> states_;
 
-    typedef std::mt19937 RngType;
-    RngType rng_;
+    std::mt19937 rng_;
     UniquePtr<Map> map_;
-    HashSet<Map::Tile*> unclaimed_tiles_;
+    HashSet<Map::Site*> unclaimed_tiles_;
 
 private:
     bool growState(State* state);

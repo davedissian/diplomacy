@@ -8,13 +8,13 @@ const float VORONOI_EPSILON = 1e-2f;
 // Structured as a voronoi graph.
 class Map {
 public:
-    struct Tile;
+    struct Site;
     struct Edge {
         Vector<Vec2> points;
 
         // Delunay Triangulation. d0.centre -> d1.centre
-        Tile* d0;
-        Tile* d1;
+        Site* d0;
+        Site* d1;
 
         Vec2& v0();
         const Vec2& v0() const;
@@ -22,10 +22,10 @@ public:
         const Vec2& v1() const;
     };
 
-    struct TileEdge {
+    struct GraphEdge {
         SharedPtr<Edge> shared_edge;
         Vector<Vec2> points;
-        Tile* neighbour;
+        Site* neighbour;
 
         Vec2& v0();
         const Vec2& v0() const;
@@ -33,9 +33,9 @@ public:
         const Vec2& v1() const;
     };
 
-    struct Tile {
+    struct Site {
         Vec2 centre;
-        Vector<TileEdge> edges;
+        Vector<GraphEdge> edges;
         bool usable;
 
         const static int EDGE_DETAIL = 0; // Total number of points in an edge = 1 << EDGE_DETAIL + 2
@@ -44,11 +44,11 @@ public:
         double vertexAngle(const Vec2& v) const;
     };
 
-    explicit Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std::mt19937& rng);
+    explicit Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng);
 
-    Vector<Tile>& tiles();
-    const Vector<Tile>& tiles() const;
+    Vector<Site>& sites();
+    const Vector<Site>& sites() const;
 
 private:
-    Vector<Tile> tiles_;
+    Vector<Site> sites_;
 };

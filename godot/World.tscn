@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://World/World.cs" type="Script" id=1]
+[ext_resource path="res://World/Map.cs" type="Script" id=2]
+
+[node name="World" type="Node2D" index="0"]
+
+script = ExtResource( 1 )
+_sections_unfolded = [ "Transform", "Visibility" ]
+
+[node name="Map" type="Node2D" parent="." index="0"]
+
+script = ExtResource( 2 )
+
+

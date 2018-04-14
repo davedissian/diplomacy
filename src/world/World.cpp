@@ -4,41 +4,10 @@
 #include "world/State.h"
 
 World::World(int num_points, const Vec2& min, const Vec2& max) {
-    const int relax_count = 20;
-
-    // Seed RNG.
-    std::uniform_real_distribution<> dist(0, 1);
-    RngType::result_type const seedval = 0xDEADBEEF; // TODO: get this from somewhere
-    rng_.seed(seedval);
-
-    // Generate points for voronoi diagram.
-    Vector<Vec2> points;
-    for (int i = 0; i < num_points; ++i) {
-        points.emplace_back(dist(rng_) * (max.x - min.x) + min.x, dist(rng_) * (max.y - min.y) + min.y);
-    }
-
-    // Build voronoi diagram and relax points using Lloyds Algorithm.
-    voronoi::Voronoi voronoi(points, min.x, max.x, min.y, max.y);
-    for (int i = 0; i < relax_count; ++i) {
-        Vector<Vec2> centres;
-        for (auto& site : voronoi.sites) {
-            Vec2 centre = {0.0f, 0.0f};
-            for (auto& edge : site.edges) {
-                // An edge begins at (e.x, e.y) and ends at (e.z, e.w).
-                centre += Vec2(edge.x, edge.y);
-                centre += Vec2(edge.z, edge.w);
-            }
-            centre /= float(site.edges.size() * 2);
-            centres.emplace_back(centre);
-        }
-        points = centres;
-        voronoi = voronoi::Voronoi(points, min.x, max.x, min.y, max.y);
-    }
-
     // Create map.
-    map_ = make_unique<Map>(voronoi, min, max, rng_);
-    unclaimed_tiles_.reserve(map_->tiles().size());
-    for (auto& tile : map_->tiles()) {
+    map_ = make_unique<Map>(num_points, min, max, rng_);
+    unclaimed_tiles_.reserve(map_->sites().size());
+    for (auto& tile : map_->sites()) {
         if (tile.usable) {
             unclaimed_tiles_.insert(&tile);
         }
@@ -48,10 +17,10 @@ World::World(int num_points, const Vec2& min, const Vec2& max) {
 
 void World::generateStates(int count, int max_size) {
     for (int i = 0; i < count; ++i) {
-        std::uniform_int_distribution<> tile_id_dist(0, (int)map_->tiles().size() - 1);
+        std::uniform_int_distribution<> tile_id_dist(0, (int) map_->sites().size() - 1);
 
         // Take a tile as the starting land.
-        HashSet<Map::Tile*> starting_land = {&map_->tiles()[tile_id_dist(rng_)]};
+        HashSet<Map::Site*> starting_land = {&map_->sites()[tile_id_dist(rng_)]};
         unclaimed_tiles_.erase(*starting_land.begin());
 
         // Form a state here.
@@ -59,7 +28,7 @@ void World::generateStates(int count, int max_size) {
         HSVColour country_colour{hue_dist(rng_), 0.8f, 0.7f, 0.8f};
         states_[i] = make_unique<State>(country_colour, "Generated State " + std::to_string(i), starting_land);
 
-        // Try and take up to 'start_size' tiles.
+        // Try and take up to 'start_size' sites.
         for (int j = 0; j < max_size; ++j) {
             if (!growState(states_[i].get())) {
                 break;
@@ -75,7 +44,7 @@ void World::fillStates(int count) {
 
         // Take a tile as the starting land.
         int starting_tile_index = tile_id_dist(rng_);
-        HashSet<Map::Tile*> starting_land = {*std::next(unclaimed_tiles_.begin(), starting_tile_index)};
+        HashSet<Map::Site*> starting_land = {*std::next(unclaimed_tiles_.begin(), starting_tile_index)};
         unclaimed_tiles_.erase(*starting_land.begin());
 
         // Form a state here.
@@ -99,7 +68,7 @@ void World::fillStates(int count) {
 
 void World::draw(sf::RenderWindow* window) {
     // Draw map.
-    for (auto& tile : map_->tiles()) {
+    for (auto& tile : map_->sites()) {
         drawTile(window, tile, sf::Color(40, 40, 40));
         drawTileEdge(window, tile, sf::Color(80, 80, 80, 80));
     }
@@ -116,7 +85,7 @@ void World::draw(sf::RenderWindow* window) {
     }
 }
 
-void World::drawTile(sf::RenderWindow* window, const Map::Tile& tile, sf::Color colour) {
+void World::drawTile(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour) {
     sf::VertexArray tile_geometry(sf::Triangles);
     for (int i = 0; i < tile.edges.size(); ++i) {
         for (int p = 0; p < tile.edges[i].points.size() - 1; p++) {
@@ -128,7 +97,7 @@ void World::drawTile(sf::RenderWindow* window, const Map::Tile& tile, sf::Color 
     window->draw(tile_geometry);
 }
 
-void World::drawTileEdge(sf::RenderWindow *window, const Map::Tile &tile, sf::Color colour) {
+void World::drawTileEdge(sf::RenderWindow *window, const Map::Site &tile, sf::Color colour) {
     // Convert into list of points.
     Vector<Vec2> ribbon_points;
     ribbon_points.reserve(tile.edges.size());
@@ -182,8 +151,8 @@ void World::drawJoinedRibbon(sf::RenderWindow *window, const Vector<Vec2>& point
     }
 }
 
-const Vector<Map::Tile>& World::mapTiles() const {
-    return map_->tiles();
+const Vector<Map::Site>& World::mapTiles() const {
+    return map_->sites();
 }
 
 const HashMap<int, SharedPtr<State>> &World::states() const {
@@ -202,7 +171,7 @@ bool World::growState(State *state) {
     auto border = state->unorderedBoundary(); // This will always contain a single exclave, the mainland.
 
     // Map border points to unclaimed land.
-    Vector<Map::Tile*> unclaimed_border_tiles;
+    Vector<Map::Site*> unclaimed_border_tiles;
     for (auto& edge : border[0]) {
         if (unclaimed_tiles_.count(edge->shared_edge->d0) == 1) {
             unclaimed_border_tiles.push_back(edge->shared_edge->d0);
@@ -219,7 +188,7 @@ bool World::growState(State *state) {
 
     // Claim a random border tile.
     std::uniform_int_distribution<> random_edge_dist(0, (int)unclaimed_border_tiles.size() - 1);
-    Map::Tile* next_tile = unclaimed_border_tiles[random_edge_dist(rng_)];
+    Map::Site* next_tile = unclaimed_border_tiles[random_edge_dist(rng_)];
     state->addLandTile(next_tile);
     unclaimed_tiles_.erase(next_tile);
     return true;

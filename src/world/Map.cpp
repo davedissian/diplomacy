@@ -40,7 +40,7 @@ void subdivide(Vector<Vec2>& points, std::mt19937& rng, const Vec2& A, const Vec
 Vector<Vec2> buildNoisyLineSegments(std::mt19937& rng, const Vec2& A, const Vec2& B, const Vec2& C, const Vec2& D, float min_length) {
     Vector<Vec2> points;
     points.push_back(A);
-    subdivide(points, rng, A, B, C, D, min_length);
+    //subdivide(points, rng, A, B, C, D, min_length);
     points.push_back(C);
     return points;
 }
@@ -62,47 +62,91 @@ const Vec2 &Map::Edge::v1() const {
     return points.back();
 }
 
-Vec2 &Map::TileEdge::v0() {
+Vec2 &Map::GraphEdge::v0() {
     return points.front();
 }
 
-const Vec2 &Map::TileEdge::v0() const {
+const Vec2 &Map::GraphEdge::v0() const {
     return points.front();
 }
 
-Vec2 &Map::TileEdge::v1() {
+Vec2 &Map::GraphEdge::v1() {
     return points.back();
 }
 
-const Vec2 &Map::TileEdge::v1() const {
+const Vec2 &Map::GraphEdge::v1() const {
     return points.back();
 }
 
-double Map::Tile::edgeAngle(const Edge &e) const {
+double Map::Site::edgeAngle(const Edge &e) const {
     Vec2 centre_offset = (e.v0() + e.v1()) * 0.5f - centre;
     return atan2(centre_offset.y, centre_offset.x);
 }
 
-double Map::Tile::vertexAngle(const Vec2 &v) const {
+double Map::Site::vertexAngle(const Vec2 &v) const {
     return atan2(v.y - centre.y, v.x - centre.x);
 }
 
-Map::Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std::mt19937& rng) {
+Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
+    const int relax_count = 100;
+
+    // Seed RNG.
+    std::uniform_real_distribution<float> dist(0, 1);
+    std::mt19937::result_type const seedval = 0xDEADBEEF; // TODO: get this from somewhere
+    rng.seed(seedval);
+
+    // Generate points for voronoi diagram.
+    Vector<jcv_point> points;
+    for (int i = 0; i < num_points; ++i) {
+        points.emplace_back(jcv_point{
+                dist(rng) * (max.x - min.x) + min.x,
+                dist(rng) * (max.y - min.y) + min.y
+        });
+    }
+
+    // Build voronoi diagram and relax points using Lloyds Algorithm.
+    jcv_rect rect = {
+            {min.x, min.y},
+            {max.x, max.y}
+    };
+    jcv_diagram diagram = {};
+    jcv_diagram_generate(num_points, points.data(), &rect, &diagram);
+    for (int i = 0; i < relax_count; ++i) {
+        points.clear();
+        const jcv_site* sites = jcv_diagram_get_sites(&diagram);
+        for (int j = 0; j < diagram.numsites; ++j) {
+            jcv_point p = {0.0f, 0.0f};
+            float edge_count = 0.0f;
+            for (jcv_graphedge* e = sites[j].edges; e; e = e->next) {
+                p.x += e->pos[0].x + e->pos[1].x;
+                p.y += e->pos[0].y + e->pos[1].y;
+                edge_count++;
+            }
+            p.x /= edge_count * 2;
+            p.y /= edge_count * 2;
+            points.emplace_back(p);
+        }
+        jcv_diagram_generate(num_points, points.data(), &rect, &diagram);
+    }
+
     // Build a list of edges.
     Vector<Edge> initial_edges;
-    initial_edges.reserve(voronoi.sites.size() * 5); // A reasonable guess to avoid reallocations.
-    tiles_.reserve(voronoi.sites.size());
-    for (auto& site : voronoi.sites) {
-        tiles_.emplace_back();
-        Tile& tile = tiles_.back();
-        tile.centre = site.coord;
+    initial_edges.reserve(diagram.numsites * 5); // A reasonable guess to avoid reallocations.
+    sites_.reserve(diagram.numsites);
+    const jcv_site* sites = jcv_diagram_get_sites(&diagram);
+    for (int i = 0; i < diagram.numsites; ++i) {
+        sites_.emplace_back();
+        Site& tile = sites_.back();
+        tile.centre = {sites[i].p.x, sites[i].p.y};
         tile.usable = true;
 
         // Setup initial edges.
-        for (auto& edge : site.edges) {
-            initial_edges.push_back({{Vec2(edge.x, edge.y), Vec2(edge.z, edge.w)}, &tile, nullptr});
+        for (jcv_graphedge* e = sites[i].edges; e; e = e->next) {
+            auto& edge = *e->edge;
+            initial_edges.push_back({{Vec2(edge.pos[0].x, edge.pos[0].y), Vec2(edge.pos[1].x, edge.pos[1].y)}, &tile, nullptr});
         }
     }
+    jcv_diagram_free(&diagram);
 
     // Merge identical edges in worst case O(N sqrt(N)) time.
     //
@@ -117,9 +161,9 @@ Map::Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std:
     // 'E.p.x <= D.p.x < e'. As we have to deal with potentially flipped edges, we may have to search until the
     // x value of the 2nd vertex of D, which makes our range 'E.p.x <= D.p.x < L+2e' (where L is the maximum edge length).
     //
-    // Let N be the number of tiles (which have an average number of edges independent of N). Sorting the array costs
+    // Let N be the number of sites (which have an average number of edges independent of N). Sorting the array costs
     // O(NlogN). Iterating through the array costs O(N) for the outer loop. The inner loop will traverse a distance of
-    // L+2e (L being the length of each axis divided by the number of tiles per axis - A/sqrt(N) - and e being constant).
+    // L+2e (L being the length of each axis divided by the number of sites per axis - A/sqrt(N) - and e being constant).
     // Traversing a distance of L is going to iterate through A/L edges, which is O(sqrt(N)). This gives a worst case
     // complexity of O(N sqrt(N)).
     std::cout << "Voronoi: Merging identical edges." << std::endl;
@@ -163,12 +207,12 @@ Map::Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std:
         Vec2 edge_midpoint = (edge->v0() + edge->v1()) * 0.5f;
 
         float min_length = 10.0f;
-        auto path0 = buildNoisyLineSegments(rng, edge->v0(), t, edge_midpoint, q, min_length);
-        auto path1 = buildNoisyLineSegments(rng, edge_midpoint, r, edge->v1(), s, min_length);
+        //auto path0 = buildNoisyLineSegments(rng, edge->v0(), t, edge_midpoint, q, min_length);
+        //auto path1 = buildNoisyLineSegments(rng, edge_midpoint, r, edge->v1(), s, min_length);
         //std::reverse(path1.begin(), path1.end());
-        path0.pop_back();
-        path0.insert(path0.end(), path1.begin(), path1.end());
-        edge->points = path0;
+        //path0.pop_back();
+        //path0.insert(path0.end(), path1.begin(), path1.end());
+        edge->points = {edge->v0(), edge->v1()};
     }
 
     /*
@@ -224,11 +268,11 @@ Map::Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std:
     // Reorder edges in each tile by their angle relative to the centre of the tile.
     // atan2(y,x) would return -pi from the left and move clockwise, so edges will be ordered west, north, east, south.
     std::cout << "Voronoi: Sorting edges by angle." << std::endl;
-    for (auto it = tiles_.begin(); it < tiles_.end(); ++it) {
+    for (auto it = sites_.begin(); it < sites_.end(); ++it) {
         auto& tile = *it;
 
         // Sort edges.
-        std::sort(tile.edges.begin(), tile.edges.end(), [&tile](const TileEdge& a, const TileEdge& b) {
+        std::sort(tile.edges.begin(), tile.edges.end(), [&tile](const GraphEdge& a, const GraphEdge& b) {
             return tile.edgeAngle(*a.shared_edge) < tile.edgeAngle(*b.shared_edge);
         });
 
@@ -246,7 +290,7 @@ Map::Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std:
             }
         }
 
-        // Fill in incomplete pairs. This should only happen on border tiles.
+        // Fill in incomplete pairs. This should only happen on border sites.
         for (int i = 0; i < tile.edges.size(); ++i) {
             Vec2& a = tile.edges[i].v1();
             Vec2& b = tile.edges[(i + 1) % tile.edges.size()].v0();
@@ -255,7 +299,7 @@ Map::Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std:
                 new_base_edge->points = {a, b};
                 new_base_edge->d0 = &tile;
                 new_base_edge->d1 = nullptr;
-                TileEdge new_edge;
+                GraphEdge new_edge;
                 new_edge.shared_edge = new_base_edge;
                 new_edge.points = new_edge.shared_edge->points;
                 tile.edges.insert(tile.edges.begin() + i + 1, new_edge);
@@ -272,10 +316,10 @@ Map::Map(const voronoi::Voronoi& voronoi, const Vec2& min, const Vec2& max, std:
     }
 }
 
-Vector<Map::Tile> &Map::tiles() {
-    return tiles_;
+Vector<Map::Site> &Map::sites() {
+    return sites_;
 }
 
-const Vector<Map::Tile> &Map::tiles() const {
-    return tiles_;
+const Vector<Map::Site> &Map::sites() const {
+    return sites_;
 }

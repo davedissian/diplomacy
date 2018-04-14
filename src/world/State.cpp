@@ -2,7 +2,7 @@
 #include "world/State.h"
 #include "world/World.h"
 
-State::State(sf::Color colour, const String& name, const HashSet<Map::Tile*>& land) : colour_(colour), name_(name), land_(land), highlighted_{false} {
+State::State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land) : colour_(colour), name_(name), land_(land), highlighted_{false} {
     colour_.a = 100;
     gui_name_.setString(name);
 
@@ -26,11 +26,11 @@ void State::setHighlighted(bool highlighted) {
     highlighted_ = highlighted;
 }
 
-void State::addLandTile(Map::Tile *tile) {
+void State::addLandTile(Map::Site *tile) {
     land_.insert(tile);
 }
 
-void State::removeLandTile(Map::Tile *tile) {
+void State::removeLandTile(Map::Site *tile) {
     land_.erase(tile);
 }
 
@@ -47,7 +47,7 @@ void State::draw(sf::RenderWindow* window, World* world) {
 
 void State::drawBorders(sf::RenderWindow* window, World* world) {
     // Build edge list containing state boundaries.
-    Vector<Vector<Map::TileEdge*>> exclave_boundaries = unorderedBoundary();
+    Vector<Vector<Map::GraphEdge*>> exclave_boundaries = unorderedBoundary();
 
     // Sort boundaries by joining vertices together.
     for (auto& boundaries : exclave_boundaries) {
@@ -85,9 +85,9 @@ void State::drawOverlays(sf::RenderWindow *window, World *world) {
     window->draw(gui_name_);
 }
 
-Vector<Vector<Map::TileEdge*>> State::unorderedBoundary() const {
+Vector<Vector<Map::GraphEdge*>> State::unorderedBoundary() const {
     // Build edge list containing state boundaries.
-    Vector<Vector<Map::TileEdge*>> exclave_boundaries;
+    Vector<Vector<Map::GraphEdge*>> exclave_boundaries;
     exclave_boundaries.emplace_back();
     for (auto &state_tile : land_) {
         for (int i = 0; i < state_tile->edges.size(); ++i) {
@@ -99,7 +99,7 @@ Vector<Vector<Map::TileEdge*>> State::unorderedBoundary() const {
     return exclave_boundaries;
 }
 
-const HashSet<Map::Tile*>& State::land() const {
+const HashSet<Map::Site*>& State::land() const {
     return land_;
 }
 
