@@ -11,11 +11,12 @@ public:
     struct Site;
     struct Edge {
         Vector<Vec2> points;
+        Site* d[2];
 
-        // Delunay Triangulation. d0.centre -> d1.centre
-        Site* d0;
-        Site* d1;
+        // Delunay Triangulation can be made from edges:
+        //  sites[0].centre -> sites[1].centre
 
+        // First and last points.
         Vec2& v0();
         const Vec2& v0() const;
         Vec2& v1();
@@ -23,10 +24,13 @@ public:
     };
 
     struct GraphEdge {
-        SharedPtr<Edge> shared_edge;
+        SharedPtr<Edge> edge;
         Vector<Vec2> points;
         Site* neighbour;
+        GraphEdge* next;
+        float angle;
 
+        // First and last points.
         Vec2& v0();
         const Vec2& v0() const;
         Vec2& v1();

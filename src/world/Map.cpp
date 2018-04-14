@@ -129,10 +129,49 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
         jcv_diagram_generate(num_points, points.data(), &rect, &diagram);
     }
 
+    // Build voronoi data structure from jcv_diagram.
+    HashMap<const jcv_edge*, SharedPtr<Edge>> edge_map;
+    sites_.resize(static_cast<size_t>(diagram.numsites));
+    const jcv_site* diagram_sites = jcv_diagram_get_sites(&diagram);
+    for (auto e = jcv_diagram_get_edges(&diagram); e; e = e->next) {
+        auto new_edge = make_shared<Edge>();
+        new_edge->points = {{e->pos[0].x, e->pos[0].y}, {e->pos[1].x, e->pos[1].y}};
+        new_edge->d[0] = &sites_[e->sites[0]->index];
+        new_edge->d[1] = &sites_[e->sites[1]->index];
+        edge_map.emplace(e, new_edge);
+    }
+    for (int i = 0; i < diagram.numsites; ++i) {
+        sites_[i].usable = true;
+        sites_[i].centre = {diagram_sites[i].p.x, diagram_sites[i].p.y};
+        for (auto e = diagram_sites[i].edges; e; e = e->next) {
+            sites_[i].edges.emplace_back();
+            auto& new_edge = sites_[i].edges.back();
+            new_edge.edge = edge_map.at(e->edge);
+            new_edge.points = {{e->pos[0].x, e->pos[0].y}, {e->pos[1].x, e->pos[1].y}};
+            new_edge.next = nullptr;
+            new_edge.angle = e->angle;
+            if (e->neighbor) {
+                new_edge.neighbour = &sites_[e->neighbor->index];
+            } else {
+                // An edge not having a neighbour site indicates that this is a site on
+                // the edges of the map. Therefore, it's not usable.
+                new_edge.neighbour = nullptr;
+                sites_[i].usable = false;
+            }
+        }
+        for (int edge_index = 0; edge_index < (sites_[i].edges.size() - 1); ++edge_index) {
+            sites_[i].edges[edge_index].next = &sites_[i].edges[edge_index + 1];
+        }
+    }
+    edge_map.clear();
+    jcv_diagram_free(&diagram);
+
+
+#if 0
     // Build a list of edges.
     Vector<Edge> initial_edges;
-    initial_edges.reserve(diagram.numsites * 5); // A reasonable guess to avoid reallocations.
-    sites_.reserve(diagram.numsites);
+    initial_edges.reserve(static_cast<size_t>(diagram.numsites * 5)); // A reasonable guess to avoid reallocations.
+    sites_.reserve(static_cast<size_t>(diagram.numsites));
     const jcv_site* sites = jcv_diagram_get_sites(&diagram);
     for (int i = 0; i < diagram.numsites; ++i) {
         sites_.emplace_back();
@@ -181,8 +220,8 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
                 //std::cout << "Merging " << i << " and " << j << " - " << initial_edges[i].d0 << " " << initial_edges[j].d0 << " - " << initial_edges[i].d1 << " " << initial_edges[j].d1 << std::endl;
                 SharedPtr<Edge> new_edge = make_shared<Edge>();
                 new_edge->points = std::move(initial_edges[i].points);
-                new_edge->d0 = initial_edges[i].d0;
-                new_edge->d1 = initial_edges[j].d0;
+                new_edge->d[0] = initial_edges[i].d[0];
+                new_edge->d[1] = initial_edges[j].d[0];
                 edges.emplace_back(new_edge);
                 break;
             }
@@ -192,17 +231,17 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
     // Populate edge lists inside each tile.
     std::cout << "Voronoi: Populating edge lists." << std::endl;
     for (SharedPtr<Edge>& edge : edges) {
-        edge->d0->edges.push_back({edge, {}, nullptr});
-        edge->d1->edges.push_back({edge, {}, nullptr});
+        edge->d[0]->edges.push_back({edge, {}, nullptr});
+        edge->d[1]->edges.push_back({edge, {}, nullptr});
     }
 
     for (auto &edge : edges) {
         auto &points = edge->points;
         float f = 0.5f;
-        Vec2 t = lerp(edge->v0(), edge->d0->centre, f);
-        Vec2 q = lerp(edge->v0(), edge->d1->centre, f);
-        Vec2 r = lerp(edge->v1(), edge->d0->centre, f);
-        Vec2 s = lerp(edge->v1(), edge->d1->centre, f);
+        Vec2 t = lerp(edge->v0(), edge->d[0]->centre, f);
+        Vec2 q = lerp(edge->v0(), edge->d[1]->centre, f);
+        Vec2 r = lerp(edge->v1(), edge->d[0]->centre, f);
+        Vec2 s = lerp(edge->v1(), edge->d[1]->centre, f);
 
         Vec2 edge_midpoint = (edge->v0() + edge->v1()) * 0.5f;
 
@@ -273,18 +312,18 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
 
         // Sort edges.
         std::sort(tile.edges.begin(), tile.edges.end(), [&tile](const GraphEdge& a, const GraphEdge& b) {
-            return tile.edgeAngle(*a.shared_edge) < tile.edgeAngle(*b.shared_edge);
+            return tile.edgeAngle(*a.edge) < tile.edgeAngle(*b.edge);
         });
 
         // Initialise edges
         for (auto& edge : tile.edges) {
-            double angle0 = tile.vertexAngle(edge.shared_edge->v0());
-            double angle1 = tile.vertexAngle(edge.shared_edge->v1());
+            double angle0 = tile.vertexAngle(edge.edge->v0());
+            double angle1 = tile.vertexAngle(edge.edge->v1());
             double difference = angle1 - angle0;
 
             const double pi = 3.14159;
             bool flipped = (difference > 0 && difference > pi) || (difference < 0 && (-difference <= pi));
-            edge.points = edge.shared_edge->points;
+            edge.points = edge.edge->points;
             if (flipped) {
                 std::reverse(edge.points.begin(), edge.points.end());
             }
@@ -297,11 +336,11 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
             if (!vecEqual(a, b, VORONOI_EPSILON)) {
                 SharedPtr<Edge> new_base_edge = make_shared<Edge>();
                 new_base_edge->points = {a, b};
-                new_base_edge->d0 = &tile;
-                new_base_edge->d1 = nullptr;
+                new_base_edge->d[0] = &tile;
+                new_base_edge->d[1] = nullptr;
                 GraphEdge new_edge;
-                new_edge.shared_edge = new_base_edge;
-                new_edge.points = new_edge.shared_edge->points;
+                new_edge.edge = new_base_edge;
+                new_edge.points = new_edge.edge->points;
                 tile.edges.insert(tile.edges.begin() + i + 1, new_edge);
 
                 // We're definitely a border tile. Set as unusable.
@@ -311,9 +350,10 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
 
         // Populate corresponding neighbours. It will be the delunay point which is not this tile.
         for (auto &edge : tile.edges) {
-            edge.neighbour = edge.shared_edge->d0 == &tile ? edge.shared_edge->d1 : edge.shared_edge->d0;
+            edge.neighbour = edge.edge->d[0] == &tile ? edge.edge->d[1] : edge.edge->d[0];
         }
     }
+#endif
 }
 
 Vector<Map::Site> &Map::sites() {

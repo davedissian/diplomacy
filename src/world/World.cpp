@@ -172,12 +172,12 @@ bool World::growState(State *state) {
 
     // Map border points to unclaimed land.
     Vector<Map::Site*> unclaimed_border_tiles;
-    for (auto& edge : border[0]) {
-        if (unclaimed_tiles_.count(edge->shared_edge->d0) == 1) {
-            unclaimed_border_tiles.push_back(edge->shared_edge->d0);
+    for (auto& e : border[0]) {
+        if (unclaimed_tiles_.count(e->edge->d[0]) == 1) {
+            unclaimed_border_tiles.push_back(e->edge->d[0]);
         }
-        if (unclaimed_tiles_.count(edge->shared_edge->d1) == 1) {
-            unclaimed_border_tiles.push_back(edge->shared_edge->d1);
+        if (unclaimed_tiles_.count(e->edge->d[1]) == 1) {
+            unclaimed_border_tiles.push_back(e->edge->d[1]);
         }
     }
 
