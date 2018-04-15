@@ -34,8 +34,8 @@ set(SOURCE_FILES
     src/gui/stb_truetype.h
     src/math/Noise.cpp
     src/math/Noise.h
+    src/math/voronoi/voronoi.c
     src/math/voronoi/voronoi.h
-    src/math/voronoi/voronoi.cpp
     src/player/Controller.cpp
     src/player/Controller.h
     src/player/LocalController.cpp

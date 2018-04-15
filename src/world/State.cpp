@@ -73,11 +73,11 @@ void State::drawBorders(sf::RenderWindow* window, World* world) {
             }
         }
 
-        // Draw ribbon.
+        // Draw border.
         HSVColour border_colour = colour_;
         border_colour.v = 0.4f;
         border_colour.a = 1.0f;
-        world->drawJoinedRibbon(window, ribbon_points, 0.0f, 3.0f, border_colour);
+        world->drawLineList(window, ribbon_points, border_colour);
     }
 }
 
