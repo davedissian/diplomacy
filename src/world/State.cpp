@@ -51,6 +51,7 @@ void State::drawBorders(sf::RenderWindow* window, World* world) {
 
     // Sort boundaries by joining vertices together.
     for (auto& boundaries : exclave_boundaries) {
+		/*
         for (int i = 0; i < boundaries.size(); ++i) {
             // Consider all edges after this one.
             for (int j = i + 1; j < boundaries.size(); ++j) {
@@ -63,12 +64,13 @@ void State::drawBorders(sf::RenderWindow* window, World* world) {
                 }
             }
         }
+		*/
 
         // Convert into list of points.
         Vector<Vec2> ribbon_points;
         ribbon_points.reserve(boundaries.size());
         for (auto &edge : boundaries) {
-            for (int i = 0; i < edge->points.size() - 1; i++) {
+            for (int i = 0; i < edge->points.size(); i++) {
                 ribbon_points.push_back(edge->points[i]);
             }
         }

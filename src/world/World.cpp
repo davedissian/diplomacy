@@ -111,14 +111,16 @@ void World::drawTileEdge(sf::RenderWindow *window, const Map::Site &tile, sf::Co
     drawJoinedRibbon(window, ribbon_points, 0.0f, 1.5f, colour);
 }
 
-void World::drawLineList(sf::RenderWindow * window, const Vector<Vec2>& points, const sf::Color & colour)
+void World::drawLineList(sf::RenderWindow* window, const Vector<Vec2>& points, const sf::Color & colour)
 {
+	if (points.size() < 2) {
+		return;
+	}
 	Vector<sf::Vertex> line_list;
-	auto transformer = [](const Vec2& p) -> sf::Vertex {
-		return sf::Vertex(toSFML(p));
-	};
-	std::transform(points.begin(), points.end(), std::back_inserter(line_list), transformer);
-	line_list.push_back(transformer(points[0]));
+	line_list.reserve(points.size());
+	for (int i = 1; i < (points.size() - 1); ++i) {
+		line_list.emplace_back(toSFML(points[i]), colour);
+	}
 	window->draw(line_list.data(), line_list.size(), sf::Lines);
 }
 

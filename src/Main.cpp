@@ -4,7 +4,7 @@
 #include "gameplay/Squad.h"
 #include "player/LocalController.h"
 
-//#define DEBUG_GUI
+#define DEBUG_GUI
 
 const int BOUNDARY_SIZE = 100;
 
