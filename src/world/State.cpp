@@ -27,11 +27,16 @@ void State::setHighlighted(bool highlighted) {
 }
 
 void State::addLandTile(Map::Site *tile) {
+    if (tile->owning_state) {
+        tile->owning_state->removeLandTile(tile);
+    }
     land_.insert(tile);
+    tile->owning_state = this;
 }
 
 void State::removeLandTile(Map::Site *tile) {
     land_.erase(tile);
+    tile->owning_state = nullptr;
 }
 
 void State::draw(sf::RenderWindow* window, World* world) {
@@ -51,35 +56,23 @@ void State::drawBorders(sf::RenderWindow* window, World* world) {
 
     // Sort boundaries by joining vertices together.
     for (auto& boundaries : exclave_boundaries) {
-		/*
-        for (int i = 0; i < boundaries.size(); ++i) {
-            // Consider all edges after this one.
-            for (int j = i + 1; j < boundaries.size(); ++j) {
-                // If edge[j] joins the end of edge[i], then move edge[j] to i + 1.
-                if (vecEqual(boundaries[j]->points.front(), boundaries[i]->points.back(), VORONOI_EPSILON)) {
-                    auto *temp = boundaries[i + 1];
-                    boundaries[i + 1] = boundaries[j];
-                    boundaries[j] = temp;
-                    break;
-                }
+        Vector<Vec2> points;
+        for (auto& edge : boundaries) {
+            points.emplace_back(edge->points.front());
+            for (int p = 1; p < (edge->points.size() - 1); ++p) {
+                points.emplace_back(edge->points[p]);
+                points.emplace_back(edge->points[p]);
             }
-        }
-		*/
-
-        // Convert into list of points.
-        Vector<Vec2> ribbon_points;
-        ribbon_points.reserve(boundaries.size());
-        for (auto &edge : boundaries) {
-            for (int i = 0; i < edge->points.size(); i++) {
-                ribbon_points.push_back(edge->points[i]);
-            }
+            points.emplace_back(edge->points.back());
         }
 
         // Draw border.
         HSVColour border_colour = colour_;
-        border_colour.v = 0.4f;
+        border_colour.s = 0.1f;
+        border_colour.v = 1.0f;
         border_colour.a = 1.0f;
-        world->drawLineList(window, ribbon_points, border_colour);
+
+        world->drawLineList(window, points, border_colour);
     }
 }
 

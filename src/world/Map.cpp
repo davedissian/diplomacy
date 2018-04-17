@@ -159,6 +159,7 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
                 sites_[i].usable = false;
             }
         }
+        sites_[i].owning_state = nullptr;
         for (int edge_index = 0; edge_index < (sites_[i].edges.size() - 1); ++edge_index) {
             sites_[i].edges[edge_index].next = &sites_[i].edges[edge_index + 1];
         }

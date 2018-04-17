@@ -4,7 +4,7 @@
 #include "gameplay/Squad.h"
 #include "player/LocalController.h"
 
-#define DEBUG_GUI
+//#define DEBUG_GUI
 
 const int BOUNDARY_SIZE = 100;
 
@@ -172,12 +172,20 @@ void MainGameState::draw(sf::RenderWindow* window) {
     // Draw world.
     world_->draw(window);
 
-    // Highlight selected tile.
+    // Highlight selected state.
     if (selected_tile_) {
         sf::Color selected_color(20, 50, 120, 120);
         sf::Color selected_edge_color(20, 50, 120, 200);
         world_->drawTile(window, *selected_tile_, selected_color);
         world_->drawTileEdge(window, *selected_tile_, selected_edge_color);
+
+        // Draw state.
+        if (selected_tile_->owning_state) {
+            selected_tile_->owning_state->setHighlighted(true);
+            selected_tile_->owning_state->draw(window, world_.get());
+            selected_tile_->owning_state->drawBorders(window, world_.get());
+            selected_tile_->owning_state->setHighlighted(false);
+        }
 
 #ifdef DEBUG_GUI
         ImGui::SetNextWindowPos(ImVec2(0, 0));
