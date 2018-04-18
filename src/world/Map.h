@@ -5,6 +5,8 @@
 
 const float VORONOI_EPSILON = 1e-2f;
 
+class State;
+
 // Structured as a voronoi graph.
 class Map {
 public:
@@ -41,6 +43,8 @@ public:
         Vec2 centre;
         Vector<GraphEdge> edges;
         bool usable;
+
+        State* owning_state;
 
         const static int EDGE_DETAIL = 0; // Total number of points in an edge = 1 << EDGE_DETAIL + 2
 

@@ -77,9 +77,11 @@ void World::draw(sf::RenderWindow* window) {
     for (auto& state_pair : states_) {
         state_pair.second->draw(window, this);
     }
+    /*
     for (auto& state_pair : states_) {
         state_pair.second->drawBorders(window, this);
     }
+     */
     for (auto& state_pair : states_) {
         state_pair.second->drawOverlays(window, this);
     }
@@ -109,6 +111,19 @@ void World::drawTileEdge(sf::RenderWindow *window, const Map::Site &tile, sf::Co
 
     // Draw ribbon.
     drawJoinedRibbon(window, ribbon_points, 0.0f, 1.5f, colour);
+}
+
+void World::drawLineList(sf::RenderWindow* window, const Vector<Vec2>& points, const sf::Color & colour)
+{
+	if (points.size() < 2) {
+		return;
+	}
+	Vector<sf::Vertex> line_list;
+	line_list.reserve(points.size());
+	for (int i = 0; i < points.size(); ++i) {
+		line_list.emplace_back(toSFML(points[i]), colour);
+	}
+	window->draw(line_list.data(), line_list.size(), sf::Lines);
 }
 
 void World::drawJoinedRibbon(sf::RenderWindow *window, const Vector<Vec2>& points, float inner_thickness,

@@ -99,15 +99,15 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
     Vector<jcv_point> points;
     for (int i = 0; i < num_points; ++i) {
         points.emplace_back(jcv_point{
-                dist(rng) * (max.x - min.x) + min.x,
-                dist(rng) * (max.y - min.y) + min.y
+            dist(rng) * (max.x - min.x) + min.x,
+            dist(rng) * (max.y - min.y) + min.y
         });
     }
 
     // Build voronoi diagram and relax points using Lloyds Algorithm.
     jcv_rect rect = {
-            {min.x, min.y},
-            {max.x, max.y}
+        {min.x, min.y},
+        {max.x, max.y}
     };
     jcv_diagram diagram = {};
     jcv_diagram_generate(num_points, points.data(), &rect, &diagram);
@@ -159,6 +159,7 @@ Map::Map(int num_points, const Vec2& min, const Vec2& max, std::mt19937& rng) {
                 sites_[i].usable = false;
             }
         }
+        sites_[i].owning_state = nullptr;
         for (int edge_index = 0; edge_index < (sites_[i].edges.size() - 1); ++edge_index) {
             sites_[i].edges[edge_index].next = &sites_[i].edges[edge_index + 1];
         }

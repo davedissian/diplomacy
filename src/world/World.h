@@ -16,7 +16,8 @@ public:
     void draw(sf::RenderWindow* window);
     void drawTile(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour);
     void drawTileEdge(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour);
-    void drawJoinedRibbon(sf::RenderWindow* window, const Vector<Vec2>& points, float inner_thickness, float outer_thickness, const sf::Color& colour);
+	void drawLineList(sf::RenderWindow* window, const Vector<Vec2>& points, const sf::Color& colour);
+	void drawJoinedRibbon(sf::RenderWindow* window, const Vector<Vec2>& points, float inner_thickness, float outer_thickness, const sf::Color& colour);
 
     // States.
     const HashMap<int, SharedPtr<State>>& states() const;
