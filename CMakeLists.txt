@@ -49,7 +49,15 @@ set(SOURCE_FILES
     src/world/World.cpp
     src/world/World.h
     src/Common.h
-    src/Main.cpp)
+    src/Game.cpp
+    src/Game.h
+    src/GameState.cpp
+    src/GameState.h
+    src/Main.cpp
+    src/MainGameState.cpp
+    src/MainGameState.h
+    src/MenuGameState.cpp
+    src/MenuGameState.h)
 add_executable(Diplomacy ${SOURCE_FILES})
 mirror_physical_directories(${SOURCE_FILES})
 
