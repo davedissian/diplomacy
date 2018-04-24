@@ -6,7 +6,7 @@
 
 const int BOUNDARY_SIZE = 100;
 
-MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_speed_{0.0f, 0.0f}, selected_tile_{nullptr}, show_orders_{false} {
+MainGameState::MainGameState(Game* game) : GameState(game), camera_movement_speed_{0.0f, 0.0f}, show_orders_{false} {
   const int world_size_preset = 1;
   const int num_players = 8;
 
@@ -69,32 +69,56 @@ void MainGameState::draw(sf::RenderWindow* window) {
   // Draw world.
   world_->draw(window);
 
-  // Highlight selected state.
-  if (selected_tile_) {
-    sf::Color selected_color(20, 50, 120, 120);
-    sf::Color selected_edge_color(20, 50, 120, 200);
-    world_->drawTile(window, *selected_tile_, selected_color);
-    world_->drawTileEdge(window, *selected_tile_, selected_edge_color);
+  // Print interaction state.
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  ImGui::SetNextWindowSize(ImVec2(400, 150));
+  ImGui::Begin("Interaction State");
+  ImGui::Text("Pending Mode: %d", (int)interaction_pending_.mode);
+  switch (interaction_pending_.mode) {
+    case InteractionMode::Unit:
+      ImGui::Text("Selected unit: %p", interaction_pending_.selected_unit);
+      break;
+    case InteractionMode::Site:
+      ImGui::Text("Selected tile: %p", interaction_pending_.selected_site);
+      break;
+    case InteractionMode::State:
+      ImGui::Text("Selected state: %p", interaction_pending_.selected_state);
+      break;
+  }
+  ImGui::End();
 
-    // Draw state.
-    if (selected_tile_->owning_state) {
-      selected_tile_->owning_state->setHighlighted(true);
-      selected_tile_->owning_state->draw(window, world_.get());
-      selected_tile_->owning_state->drawBorders(window, world_.get());
-      selected_tile_->owning_state->setHighlighted(false);
-    }
+  // Highlight based on pending state.
+  switch (interaction_pending_.mode) {
+    case InteractionMode::Unit:
+      break;
+    case InteractionMode::Site:
+      if (interaction_pending_.selected_site) {
+        auto& site = *interaction_pending_.selected_site;
+
+        sf::Color selected_color(20, 50, 120, 120);
+        sf::Color selected_edge_color(20, 50, 120, 200);
+        world_->drawTile(window, site, selected_color);
+        world_->drawTileEdge(window, site, selected_edge_color);
+
+        // Draw state.
+        if (site.owning_state) {
+          site.owning_state->setHighlighted(true);
+          site.owning_state->draw(window, world_.get());
+          site.owning_state->drawBorders(window, world_.get());
+          site.owning_state->setHighlighted(false);
+        }
 
 #ifdef DEBUG_GUI
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowPos(ImVec2(0, 250));
         ImGui::SetNextWindowSize(ImVec2(700, 250));
-        ImGui::Begin("Selected Tile");
-        ImGui::Text("Centre: %f %f", selected_tile_->centre.x, selected_tile_->centre.y);
-        ImGui::Text("Unusable? %s", selected_tile_->usable ? "true" : "false");
-        for (int i = 0; i < selected_tile_->edges.size(); ++i) {
-            auto& e = selected_tile_->edges[i];
+        ImGui::Begin("Selected Site");
+        ImGui::Text("Centre: %f %f", site.centre.x, site.centre.y);
+        ImGui::Text("Unusable? %s", site.usable ? "true" : "false");
+        for (int i = 0; i < site.edges.size(); ++i) {
+            auto& e = site.edges[i];
             auto& n = e.neighbour;
-            float angle1 = (float)selected_tile_->vertexAngle(e.points.front());
-            float angle2 = (float)selected_tile_->vertexAngle(e.points.back());
+            float angle1 = (float)site.vertexAngle(e.points.front());
+            float angle2 = (float)site.vertexAngle(e.points.back());
             if (n != nullptr) {
                 ImGui::Text("- Neighbour %d (edge %.0f %.0f (%.1f) to %.0f %.0f (%.1f) diff: %.1f) - centre %.0f %.0f",
                     i,
@@ -111,6 +135,10 @@ void MainGameState::draw(sf::RenderWindow* window) {
         }
         ImGui::End();
 #endif
+      }
+      break;
+    case InteractionMode::State:
+      break;
   }
 
   // Draw units.
@@ -130,6 +158,13 @@ void MainGameState::handleKey(float dt, sf::Event::KeyEvent& e, bool pressed) {
   if (e.code == sf::Keyboard::LShift) {
     show_orders_ = pressed;
   }
+  if (e.code == sf::Keyboard::LControl || e.code == sf::Keyboard::RControl) {
+    interaction_pending_ = InteractionState{InteractionMode::Site};
+  } else if (e.code == sf::Keyboard::LAlt || e.code == sf::Keyboard::RAlt) {
+    interaction_pending_ = InteractionState{InteractionMode::State};
+  } else {
+    interaction_pending_ = InteractionState{InteractionMode::Unit};
+  }
 }
 
 void MainGameState::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
@@ -139,13 +174,29 @@ void MainGameState::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
 
   // Highlight tile underneath cursor.
   Vec2 proj_mouse_position = game_->mapScreenToWorld(current_mouse_position);
-  float nearest_distance_sq = std::numeric_limits<float>::infinity();
-  for (auto& tile : world_->mapTiles()) {
-    float distance = glm::distance2(proj_mouse_position, tile.centre);
-    if (distance < nearest_distance_sq) {
-      nearest_distance_sq = distance;
-      selected_tile_ = &tile;
+  auto find_nearest_site = [&]() -> Map::Site* {
+    float nearest_distance_sq = std::numeric_limits<float>::infinity();
+    Map::Site* nearest_site = nullptr;
+    for (auto &site : world_->mapSites()) {
+      float distance = glm::distance2(proj_mouse_position, site.centre);
+      if (distance < nearest_distance_sq) {
+        nearest_distance_sq = distance;
+        nearest_site = &site;
+      }
     }
+  };
+  switch (interaction_pending_.mode) {
+    case InteractionMode::Site:
+      interaction_pending_.selected_site = find_nearest_site();
+      break;
+    case InteractionMode::State:
+      {
+        auto site = find_nearest_site();
+        if (site) {
+          interaction_pending_.selected_state = site->owning_state;
+        }
+      }
+      break;
   }
 
   // If the mouse cursor reaches the boundary of the screen, move in that direction, scaled by distance.
@@ -186,8 +237,21 @@ void MainGameState::handleMouseMoved(float dt, sf::Event::MouseMoveEvent &e) {
 }
 
 void MainGameState::handleMouseButton(float dt, sf::Event::MouseButtonEvent &e, MouseButtonState state) {
-  if (state == MouseButtonState::Pressed && e.button == sf::Mouse::Right) {
-    units_[0]->addOrder(make_unique<MoveOrder>(game_->mapScreenToWorld(last_mouse_position_)), show_orders_);
+  if (state == MouseButtonState::Pressed) {
+    // Save pending interaction.
+    if (e.button == sf::Mouse::Left) {
+      interaction_state_ = interaction_pending_;
+      interaction_pending_ = InteractionState{};
+    } else if (e.button == sf::Mouse::Right) {
+      // Do action.
+      switch (interaction_state_.mode) {
+        case InteractionMode::Unit: {
+          interaction_state_.selected_unit->addOrder(
+              make_unique<MoveOrder>(game_->mapScreenToWorld(last_mouse_position_)),
+              show_orders_);
+        } break;
+      }
+    }
   }
 }
 

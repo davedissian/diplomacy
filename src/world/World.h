@@ -24,7 +24,8 @@ public:
     WeakPtr<State> getStateById(int id) const;
 
     // Tiles.
-    const Vector<Map::Site>& mapTiles() const;
+    Vector<Map::Site>& mapSites();
+    const Vector<Map::Site>& mapSites() const;
 
 private:
     HashMap<int, SharedPtr<State>> states_;

@@ -166,7 +166,11 @@ void World::drawJoinedRibbon(sf::RenderWindow *window, const Vector<Vec2>& point
     }
 }
 
-const Vector<Map::Site>& World::mapTiles() const {
+Vector<Map::Site>& World::mapSites() {
+    return map_->sites();
+}
+
+const Vector<Map::Site>& World::mapSites() const {
     return map_->sites();
 }
 

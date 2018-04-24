@@ -9,12 +9,20 @@
 #include "player/LocalController.h"
 
 enum class InteractionMode {
-  SelectingUnit,
-  SelectingTile,
-  SelectingState,
-  SelectedUnit,
-  SelectedTile,
-  SelectedState
+  None,
+  Unit,
+  Site,
+  State
+};
+
+struct InteractionState {
+  InteractionState() : InteractionState(InteractionMode::None) {}
+  InteractionState(InteractionMode mode) : mode{mode}, selected_unit{nullptr}, selected_site{nullptr}, selected_state{nullptr} {}
+
+  InteractionMode mode;
+  Unit* selected_unit; // Used by InteractionMode::Unit
+  Map::Site* selected_site; // Used by InteractionMode::Site
+  State* selected_state; // Used by InteractionMode::State
 };
 
 class MainGameState : public GameState
@@ -38,8 +46,11 @@ private:
   Vec2 target_centre_;
   Vec2 target_size_;
 
+  // Interaction.
+  InteractionState interaction_state_, interaction_pending_;
+
+  // World.
   UniquePtr<World> world_;
-  const Map::Site* selected_tile_;
 
   // Players.
   Vector<SharedPtr<Player>> players_;
