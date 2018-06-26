@@ -7,6 +7,11 @@ Unit::Unit(const Vec2& position) : position_{position}, orders_{this} {
 Unit::~Unit() {
 }
 
+void Unit::setOwner(WeakPtr<Player> owner)
+{
+	owner_ = owner;
+}
+
 void Unit::addOrder(UniquePtr<Order> order, bool queue) {
     orders_.add(std::move(order), queue);
 }

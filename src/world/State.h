@@ -55,6 +55,19 @@ inline Vector<HashSet<Vec2i>> getExclaves(HashSet<Vec2i> points) {
     return exclaves;
 }
 
+class City
+{
+public:
+	City(const String& name, Map::Site* site, Vec2& position);
+
+	void draw(RenderContext& ctx, sf::Shape& shape);
+
+private:
+	Map::Site* site_;
+	Vec2 position_;
+	sf::Text gui_name_;
+};
+
 class State {
 public:
     State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land);
@@ -83,4 +96,6 @@ private:
 
     // Rendering data.
     sf::Text gui_name_;
+	sf::RectangleShape capital_shape_;
+	sf::CircleShape city_shape_;
 };

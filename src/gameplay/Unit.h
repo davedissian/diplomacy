@@ -3,11 +3,14 @@
 #include "Orders.h"
 
 class World;
+class Player;
 
 class Unit {
 public:
     Unit(const Vec2& position);
     virtual ~Unit();
+
+	void setOwner(WeakPtr<Player> owner);
 
     void addOrder(UniquePtr<Order> order, bool queue);
 
@@ -24,4 +27,6 @@ public:
 protected:
     Vec2 position_;
     OrderList orders_;
+
+	WeakPtr<Player> owner_;
 };

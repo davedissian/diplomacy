@@ -4,8 +4,8 @@
 
 Squad::Squad(const Vec2& position) : Unit(position), speed_{50.0f}
 {
-    shape_.setRadius(10.0f);
-    shape_.setFillColor(sf::Color::White);
+    shape_.setRadius(5.0f);
+	shape_.setFillColor(sf::Color{150, 150, 150});
 }
 
 void Squad::draw(RenderContext& ctx) {

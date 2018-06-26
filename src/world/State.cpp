@@ -2,6 +2,21 @@
 #include "world/State.h"
 #include "world/World.h"
 
+City::City(const String& name, Map::Site* site, Vec2& position) : site_{site}, position_{position}
+{
+	gui_name_.setString(name);
+	gui_name_.setPosition(toSFML(position));
+}
+
+void City::draw(RenderContext& ctx, sf::Shape& shape)
+{
+	gui_name_.setFont(ctx.font);
+	ctx.window->draw(gui_name_);
+
+	shape.setPosition(toSFML(position_));
+	ctx.window->draw(shape);
+}
+
 State::State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land) : colour_(colour), name_(name), land_(land) {
     colour_.a = 100;
     gui_name_.setString(name);
@@ -81,3 +96,4 @@ sf::Color State::colour() const
 {
 	return colour_;
 }
+
