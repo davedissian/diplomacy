@@ -14,8 +14,8 @@ public:
     void stepTowards(float dt, const Vec2& direction, float factor);
 
     virtual void tick(float dt);
-    virtual void draw(sf::RenderWindow* window, World* world) = 0;
-    void drawOrderOverlay(sf::RenderWindow* window);
+    virtual void draw(RenderContext& ctx) = 0;
+    void drawOrderOverlay(RenderContext& ctx);
 
     virtual float speed() const = 0;
 

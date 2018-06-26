@@ -8,7 +8,7 @@ public:
     ~Squad() override = default;
 
     // Unit
-    virtual void draw(sf::RenderWindow* window, World* world) override;
+    virtual void draw(RenderContext& ctx) override;
     virtual float speed() const override;
 
 private:

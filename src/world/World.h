@@ -4,6 +4,8 @@
 #include "world/State.h"
 #include "gameplay/Unit.h"
 
+#include "RenderContext.h"
+
 class World {
 public:
     World(int num_points, const Vec2& min, const Vec2& max);
@@ -13,11 +15,13 @@ public:
     void fillStates(int count);
 
     // Drawing.
-    void draw(sf::RenderWindow* window);
-    void drawTile(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour);
-    void drawTileEdge(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour);
-	void drawLineList(sf::RenderWindow* window, const Vector<Vec2>& points, const sf::Color& colour);
-	void drawJoinedRibbon(sf::RenderWindow* window, const Vector<Vec2>& points, float inner_thickness, float outer_thickness, const sf::Color& colour);
+    void draw(RenderContext& ctx);
+    void drawTile(RenderContext& ctx, const Map::Site& tile, sf::Color colour);
+    void drawTileEdge(RenderContext& ctx, const Map::Site& tile, sf::Color colour);
+	void drawLineList(RenderContext& ctx, const Vector<Vec2>& points, const sf::Color& colour);
+	void drawJoinedRibbon(RenderContext& ctx, const Vector<Vec2>& points, float inner_thickness, float outer_thickness, const sf::Color& colour);
+
+	void drawBorder(RenderContext& ctx, Vector<Vector<Map::GraphEdge*>> list_of_boundaries, sf::Color colour);
 
     // States.
     const HashMap<int, SharedPtr<State>>& states() const;

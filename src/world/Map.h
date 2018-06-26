@@ -57,6 +57,8 @@ public:
     Vector<Site>& sites();
     const Vector<Site>& sites() const;
 
+	static Vector<Vector<Map::GraphEdge*>> unorderedBoundaries(const HashSet<Map::Site*>& sites);
+
 private:
     Vector<Site> sites_;
 };

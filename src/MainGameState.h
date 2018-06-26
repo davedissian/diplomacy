@@ -49,6 +49,9 @@ private:
   // Interaction.
   InteractionState interaction_state_, interaction_pending_;
 
+  // Render state.
+  RenderContext render_context_;
+
   // World.
   UniquePtr<World> world_;
 

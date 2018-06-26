@@ -20,9 +20,9 @@ void Unit::tick(float dt) {
     orders_.tick(dt);
 }
 
-void Unit::draw(sf::RenderWindow *window, World *world) {
+void Unit::draw(RenderContext&) {
 }
 
-void Unit::drawOrderOverlay(sf::RenderWindow* window) {
-    orders_.draw(window);
+void Unit::drawOrderOverlay(RenderContext& ctx) {
+    orders_.draw(ctx);
 }

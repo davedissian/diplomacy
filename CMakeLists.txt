@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.2)
 project(Diplomacy)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+endif()
 
 # Mirror the directory structure in virtual directory based projects
 function(mirror_physical_directories)
@@ -79,4 +81,8 @@ target_include_directories(Diplomacy PRIVATE ${SFML_INCLUDE_DIR})
 target_link_libraries(Diplomacy ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 find_package(OpenGL REQUIRED)
-target_link_libraries(Diplomacy OpenGL::GL)
+if(WIN32)
+    target_link_libraries(Diplomacy ${OPENGL_LIBRARIES})
+else()
+    target_link_libraries(Diplomacy OpenGL::GL)
+endif()

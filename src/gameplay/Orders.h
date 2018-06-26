@@ -1,6 +1,7 @@
 #pragma once
 
 class Unit;
+struct RenderContext;
 
 class Order {
 public:
@@ -8,7 +9,7 @@ public:
     virtual ~Order() = default;
 
     // Draw when visible.
-    virtual void draw(sf::RenderWindow* window) = 0;
+    virtual void draw(RenderContext& ctx) = 0;
 
     // True: completed. False: Requires more processing.
     virtual bool tick(float dt) = 0;
@@ -28,7 +29,7 @@ public:
     ~MoveOrder() override = default;
 
     // Order
-    void draw(sf::RenderWindow* window) override;
+    void draw(RenderContext& ctx) override;
     bool tick(float dt) override;
 
 private:
@@ -46,7 +47,7 @@ public:
 
     void add(UniquePtr<Order> order, bool queue);
 
-    void draw(sf::RenderWindow* window);
+    void draw(RenderContext& ctx);
     void tick(float dt);
 
 private:

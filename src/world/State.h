@@ -3,6 +3,7 @@
 #include "Map.h"
 
 class World;
+struct RenderContext;
 
 inline Vector<HashSet<Vec2i>> getExclaves(HashSet<Vec2i> points) {
     /*
@@ -59,19 +60,20 @@ public:
     State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land);
 
     void setName(const String& name);
-    void setHighlighted(bool highlighted);
 
     void addLandTile(Map::Site* tile);
     void removeLandTile(Map::Site *tile);
 
-    void draw(sf::RenderWindow* window, World* world);
-    void drawBorders(sf::RenderWindow* window, World* world);
-    void drawOverlays(sf::RenderWindow* window, World* world);
+    void draw(RenderContext& ctx, bool highlighted);
+    void drawBorders(RenderContext& ctx);
+    void drawOverlays(RenderContext& ctx);
 
     Vector<Vector<Map::GraphEdge*>> unorderedBoundary() const;
     const HashSet<Map::Site*>& land() const;
 
     const Vec2 midpoint() const;
+
+	sf::Color colour() const;
 
 private:
     sf::Color colour_;
@@ -80,6 +82,5 @@ private:
     Vec2 centre_;
 
     // Rendering data.
-    bool highlighted_;
     sf::Text gui_name_;
 };

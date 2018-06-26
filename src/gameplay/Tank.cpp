@@ -1,4 +1,5 @@
 #include "Common.h"
+#include "RenderContext.h"
 #include "Tank.h"
 
 Tank::Tank(const Vec2& position) : Unit(position), speed_{100.0f}
@@ -7,9 +8,9 @@ Tank::Tank(const Vec2& position) : Unit(position), speed_{100.0f}
     tank_shape_.setFillColor(sf::Color::White);
 }
 
-void Tank::draw(sf::RenderWindow *window, World *world) {
+void Tank::draw(RenderContext& ctx) {
     tank_shape_.setPosition(toSFML(position_));
-    window->draw(tank_shape_);
+    ctx.window->draw(tank_shape_);
 }
 
 float Tank::speed() const {

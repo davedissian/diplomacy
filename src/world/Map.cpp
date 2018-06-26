@@ -364,3 +364,21 @@ Vector<Map::Site> &Map::sites() {
 const Vector<Map::Site> &Map::sites() const {
     return sites_;
 }
+
+Vector<Vector<Map::Map::GraphEdge*>> Map::unorderedBoundaries(const HashSet<Site*>& sites)
+{
+	// Build edge list containing site boundaries.
+	Vector<Vector<Map::GraphEdge*>> exclave_boundaries;
+	exclave_boundaries.emplace_back();
+	for (auto &site : sites)
+	{
+		for (int i = 0; i < site->edges.size(); ++i)
+		{
+			if (sites.count(site->edges[i].neighbour) == 0)
+			{
+				exclave_boundaries.back().push_back(&site->edges[i]);
+			}
+		}
+	}
+	return exclave_boundaries;
+}
