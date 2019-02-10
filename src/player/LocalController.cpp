@@ -8,11 +8,7 @@ void LocalController::tick(float dt)
 }
 
 void LocalController::possess(Player *player) {
-    if (possessed_) {
-        possessed_->state().lock()->setHighlighted(false);
-    }
     Controller::possess(player);
-    possessed_->state().lock()->setHighlighted(true);
 }
 
 void LocalController::handleKey(float dt, sf::Event::KeyEvent &e, bool pressed)

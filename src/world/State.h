@@ -3,6 +3,7 @@
 #include "Map.h"
 
 class World;
+struct RenderContext;
 
 inline Vector<HashSet<Vec2i>> getExclaves(HashSet<Vec2i> points) {
     /*
@@ -54,24 +55,38 @@ inline Vector<HashSet<Vec2i>> getExclaves(HashSet<Vec2i> points) {
     return exclaves;
 }
 
+class City
+{
+public:
+	City(const String& name, Map::Site* site, Vec2& position);
+
+	void draw(RenderContext& ctx, sf::Shape& shape);
+
+private:
+	Map::Site* site_;
+	Vec2 position_;
+	sf::Text gui_name_;
+};
+
 class State {
 public:
     State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land);
 
     void setName(const String& name);
-    void setHighlighted(bool highlighted);
 
     void addLandTile(Map::Site* tile);
     void removeLandTile(Map::Site *tile);
 
-    void draw(sf::RenderWindow* window, World* world);
-    void drawBorders(sf::RenderWindow* window, World* world);
-    void drawOverlays(sf::RenderWindow* window, World* world);
+    void draw(RenderContext& ctx, bool highlighted);
+    void drawBorders(RenderContext& ctx);
+    void drawOverlays(RenderContext& ctx);
 
     Vector<Vector<Map::GraphEdge*>> unorderedBoundary() const;
     const HashSet<Map::Site*>& land() const;
 
     const Vec2 midpoint() const;
+
+	sf::Color colour() const;
 
 private:
     sf::Color colour_;
@@ -80,6 +95,7 @@ private:
     Vec2 centre_;
 
     // Rendering data.
-    bool highlighted_;
     sf::Text gui_name_;
+	sf::RectangleShape capital_shape_;
+	sf::CircleShape city_shape_;
 };

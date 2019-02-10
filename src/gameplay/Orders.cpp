@@ -1,6 +1,7 @@
 #include "Common.h"
 #include "Orders.h"
 #include "Unit.h"
+#include "RenderContext.h"
 
 Order::Order() : unit_{nullptr}, previous_{nullptr} {
 }
@@ -8,14 +9,14 @@ Order::Order() : unit_{nullptr}, previous_{nullptr} {
 MoveOrder::MoveOrder(const Vec2& target_position): target_position_{target_position} {
 }
 
-void MoveOrder::draw(sf::RenderWindow* window) {
+void MoveOrder::draw(RenderContext& ctx) {
     Vec2 rem = remaining();
     sf::RectangleShape travel_line;
     travel_line.setSize({glm::length(rem), 3.0f});
     travel_line.setPosition(toSFML(startPosition()));
     travel_line.setRotation(atan2(rem.y, rem.x) * RAD_TO_DEG);
     travel_line.setFillColor(sf::Color(255, 255, 255, 120));
-    window->draw(travel_line);
+    ctx.window->draw(travel_line);
 }
 
 bool MoveOrder::tick(float dt) {
@@ -61,9 +62,9 @@ void OrderList::add(UniquePtr<Order> order, bool queue) {
     orders_.emplace_back(std::move(order));
 }
 
-void OrderList::draw(sf::RenderWindow* window) {
+void OrderList::draw(RenderContext& ctx) {
     for (auto it = orders_.rbegin(); it != orders_.rend(); ++it) {
-        (*it)->draw(window);
+        (*it)->draw(ctx);
     }
 }
 

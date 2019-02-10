@@ -1,15 +1,16 @@
 #include "Common.h"
 #include "Squad.h"
+#include "RenderContext.h"
 
 Squad::Squad(const Vec2& position) : Unit(position), speed_{50.0f}
 {
-    shape_.setRadius(10.0f);
-    shape_.setFillColor(sf::Color::White);
+    shape_.setRadius(5.0f);
+	shape_.setFillColor(sf::Color{150, 150, 150});
 }
 
-void Squad::draw(sf::RenderWindow *window, World *world) {
+void Squad::draw(RenderContext& ctx) {
     shape_.setPosition(toSFML(position_));
-    window->draw(shape_);
+    ctx.window->draw(shape_);
 }
 
 float Squad::speed() const {

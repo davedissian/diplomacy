@@ -66,28 +66,28 @@ void World::fillStates(int count) {
     }
 }
 
-void World::draw(sf::RenderWindow* window) {
+void World::draw(RenderContext& ctx) {
     // Draw map.
     for (auto& tile : map_->sites()) {
-        drawTile(window, tile, sf::Color(40, 40, 40));
-        drawTileEdge(window, tile, sf::Color(80, 80, 80, 80));
+        drawTile(ctx, tile, sf::Color(40, 40, 40));
+        drawTileEdge(ctx, tile, sf::Color(80, 80, 80, 80));
     }
 
     // Draw states.
     for (auto& state_pair : states_) {
-        state_pair.second->draw(window, this);
+        state_pair.second->draw(ctx, false);
     }
     /*
     for (auto& state_pair : states_) {
-        state_pair.second->drawBorders(window, this);
+        state_pair.second->drawBorders(ctx);
     }
      */
     for (auto& state_pair : states_) {
-        state_pair.second->drawOverlays(window, this);
+        state_pair.second->drawOverlays(ctx);
     }
 }
 
-void World::drawTile(sf::RenderWindow* window, const Map::Site& tile, sf::Color colour) {
+void World::drawTile(RenderContext& ctx, const Map::Site& tile, sf::Color colour) {
     sf::VertexArray tile_geometry(sf::Triangles);
     for (int i = 0; i < tile.edges.size(); ++i) {
         for (int p = 0; p < tile.edges[i].points.size() - 1; p++) {
@@ -96,10 +96,10 @@ void World::drawTile(sf::RenderWindow* window, const Map::Site& tile, sf::Color 
             tile_geometry.append(sf::Vertex(toSFML(tile.edges[i].points[p + 1]), colour));
         }
     }
-    window->draw(tile_geometry);
+    ctx.window->draw(tile_geometry);
 }
 
-void World::drawTileEdge(sf::RenderWindow *window, const Map::Site &tile, sf::Color colour) {
+void World::drawTileEdge(RenderContext& ctx, const Map::Site &tile, sf::Color colour) {
     // Convert into list of points.
     Vector<Vec2> ribbon_points;
     ribbon_points.reserve(tile.edges.size());
@@ -110,10 +110,10 @@ void World::drawTileEdge(sf::RenderWindow *window, const Map::Site &tile, sf::Co
     }
 
     // Draw ribbon.
-    drawJoinedRibbon(window, ribbon_points, 0.0f, 1.5f, colour);
+    drawJoinedRibbon(ctx, ribbon_points, 0.0f, 1.5f, colour);
 }
 
-void World::drawLineList(sf::RenderWindow* window, const Vector<Vec2>& points, const sf::Color & colour)
+void World::drawLineList(RenderContext& ctx, const Vector<Vec2>& points, const sf::Color & colour)
 {
 	if (points.size() < 2) {
 		return;
@@ -123,10 +123,10 @@ void World::drawLineList(sf::RenderWindow* window, const Vector<Vec2>& points, c
 	for (int i = 0; i < points.size(); ++i) {
 		line_list.emplace_back(toSFML(points[i]), colour);
 	}
-	window->draw(line_list.data(), line_list.size(), sf::Lines);
+	ctx.window->draw(line_list.data(), line_list.size(), sf::Lines);
 }
 
-void World::drawJoinedRibbon(sf::RenderWindow *window, const Vector<Vec2>& points, float inner_thickness,
+void World::drawJoinedRibbon(RenderContext& ctx, const Vector<Vec2>& points, float inner_thickness,
                              float outer_thickness, const sf::Color& colour) {
     // Draw border using a ribbon.
     if (points.size() > 2) {
@@ -162,8 +162,35 @@ void World::drawJoinedRibbon(sf::RenderWindow *window, const Vector<Vec2>& point
             border[i * 4 + 3].position = toSFML(ribbon_edges[i].second);
             border[i * 4 + 3].color = colour;
         }
-        window->draw(border);
+        ctx.window->draw(border);
     }
+}
+
+void World::drawBorder(RenderContext& ctx, Vector<Vector<Map::GraphEdge*>> list_of_boundaries, sf::Color colour)
+{
+	// Sort boundaries by joining vertices together.
+	for (auto& boundaries : list_of_boundaries)
+	{
+		Vector<Vec2> points;
+		for (auto& edge : boundaries)
+		{
+			points.emplace_back(edge->points.front());
+			for (int p = 1; p < (edge->points.size() - 1); ++p)
+			{
+				points.emplace_back(edge->points[p]);
+				points.emplace_back(edge->points[p]);
+			}
+			points.emplace_back(edge->points.back());
+		}
+
+		// Draw border.
+		HSVColour border_colour = colour;
+		border_colour.s = 0.1f;
+		border_colour.v = 1.0f;
+		border_colour.a = 1.0f;
+
+		drawLineList(ctx, points, border_colour);
+	}
 }
 
 Vector<Map::Site>& World::mapSites() {

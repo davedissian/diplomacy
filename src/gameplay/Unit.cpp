@@ -7,6 +7,11 @@ Unit::Unit(const Vec2& position) : position_{position}, orders_{this} {
 Unit::~Unit() {
 }
 
+void Unit::setOwner(WeakPtr<Player> owner)
+{
+	owner_ = owner;
+}
+
 void Unit::addOrder(UniquePtr<Order> order, bool queue) {
     orders_.add(std::move(order), queue);
 }
@@ -20,9 +25,9 @@ void Unit::tick(float dt) {
     orders_.tick(dt);
 }
 
-void Unit::draw(sf::RenderWindow *window, World *world) {
+void Unit::draw(RenderContext&) {
 }
 
-void Unit::drawOrderOverlay(sf::RenderWindow* window) {
-    orders_.draw(window);
+void Unit::drawOrderOverlay(RenderContext& ctx) {
+    orders_.draw(ctx);
 }

@@ -2,7 +2,22 @@
 #include "world/State.h"
 #include "world/World.h"
 
-State::State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land) : colour_(colour), name_(name), land_(land), highlighted_{false} {
+City::City(const String& name, Map::Site* site, Vec2& position) : site_{site}, position_{position}
+{
+	gui_name_.setString(name);
+	gui_name_.setPosition(toSFML(position));
+}
+
+void City::draw(RenderContext& ctx, sf::Shape& shape)
+{
+	gui_name_.setFont(ctx.font);
+	ctx.window->draw(gui_name_);
+
+	shape.setPosition(toSFML(position_));
+	ctx.window->draw(shape);
+}
+
+State::State(sf::Color colour, const String& name, const HashSet<Map::Site*>& land) : colour_(colour), name_(name), land_(land) {
     colour_.a = 100;
     gui_name_.setString(name);
 
@@ -22,10 +37,6 @@ void State::setName(const String &name) {
     gui_name_.setString(name);
 }
 
-void State::setHighlighted(bool highlighted) {
-    highlighted_ = highlighted;
-}
-
 void State::addLandTile(Map::Site *tile) {
     if (tile->owning_state) {
         tile->owning_state->removeLandTile(tile);
@@ -39,45 +50,24 @@ void State::removeLandTile(Map::Site *tile) {
     tile->owning_state = nullptr;
 }
 
-void State::draw(sf::RenderWindow* window, World* world) {
+void State::draw(RenderContext& ctx, bool highlighted) {
     sf::Color colour = colour_;
-    if (!highlighted_) {
+    if (!highlighted) {
         colour.a = 40;
     }
     for (const auto tile : land_) {
-        world->drawTile(window, *tile, colour);
+        ctx.world->drawTile(ctx, *tile, colour);
         //world->drawTileEdge(window, *tile, sf::Color(colour_.r, colour_.g, colour_.b, 40));
     }
 }
 
-void State::drawBorders(sf::RenderWindow* window, World* world) {
-    // Build edge list containing state boundaries.
-    Vector<Vector<Map::GraphEdge*>> exclave_boundaries = unorderedBoundary();
-
-    // Sort boundaries by joining vertices together.
-    for (auto& boundaries : exclave_boundaries) {
-        Vector<Vec2> points;
-        for (auto& edge : boundaries) {
-            points.emplace_back(edge->points.front());
-            for (int p = 1; p < (edge->points.size() - 1); ++p) {
-                points.emplace_back(edge->points[p]);
-                points.emplace_back(edge->points[p]);
-            }
-            points.emplace_back(edge->points.back());
-        }
-
-        // Draw border.
-        HSVColour border_colour = colour_;
-        border_colour.s = 0.1f;
-        border_colour.v = 1.0f;
-        border_colour.a = 1.0f;
-
-        world->drawLineList(window, points, border_colour);
-    }
+void State::drawBorders(RenderContext& ctx) {
+	ctx.world->drawBorder(ctx, Map::unorderedBoundaries(land_), colour_);
 }
 
-void State::drawOverlays(sf::RenderWindow *window, World *world) {
-    window->draw(gui_name_);
+void State::drawOverlays(RenderContext& ctx) {
+	gui_name_.setFont(ctx.font);
+    ctx.window->draw(gui_name_);
 }
 
 Vector<Vector<Map::GraphEdge*>> State::unorderedBoundary() const {
@@ -101,3 +91,9 @@ const HashSet<Map::Site*>& State::land() const {
 const Vec2 State::midpoint() const {
     return centre_;
 }
+
+sf::Color State::colour() const
+{
+	return colour_;
+}
+
